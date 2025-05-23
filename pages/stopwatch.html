@@ -2,43 +2,59 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>秒表</title>
+  <title>秒表（毫秒）</title>
   <link rel="stylesheet" href="../style.css">
 </head>
 <body>
-  <h1>秒表</h1>
-  <div id="stopwatch" style="font-size: 10vw;">00:00:00</div>
+  <h1>秒表（毫秒）</h1>
+  <div id="stopwatch" style="font-size: 10vw;">00:00:00.000</div>
   <div>
     <button onclick="start()">开始</button>
     <button onclick="pause()">暂停</button>
     <button onclick="reset()">重置</button>
   </div>
   <script>
-    let time = 0, running = false, interval;
-    function format(t) {
-      const h = String(Math.floor(t / 3600)).padStart(2, '0');
-      const m = String(Math.floor((t % 3600) / 60)).padStart(2, '0');
-      const s = String(t % 60).padStart(2, '0');
-      return h + ':' + m + ':' + s;
+    let startTime = 0, elapsed = 0, running = false, interval;
+
+    function format(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+      const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+      const s = String(totalSeconds % 60).padStart(2, '0');
+      const msPart = String(ms % 1000).padStart(3, '0');
+      return `${h}:${m}:${s}.${msPart}`;
     }
+
     function update() {
-      document.getElementById('stopwatch').textContent = format(time);
+      const now = performance.now();
+      const current = running ? now - startTime + elapsed : elapsed;
+      document.getElementById('stopwatch').textContent = format(Math.floor(current));
     }
+
     function start() {
       if (!running) {
-        interval = setInterval(() => { time++; update(); }, 1000);
+        startTime = performance.now();
+        interval = setInterval(update, 30);
         running = true;
       }
     }
+
     function pause() {
+      if (running) {
+        elapsed += performance.now() - startTime;
+        clearInterval(interval);
+        running = false;
+        update();
+      }
+    }
+
+    function reset() {
       clearInterval(interval);
       running = false;
-    }
-    function reset() {
-      pause();
-      time = 0;
+      elapsed = 0;
       update();
     }
+
     update();
   </script>
 </body>
