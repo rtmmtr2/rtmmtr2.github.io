@@ -1,22 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="styles.css">
-  <title>LED Clock</title>
+  <title>北京时间 - LED风格</title>
+  <style>
+    body {
+      background-color: #000;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    .clock {
+      font-size: 6em;
+      color: #0f0;
+      text-shadow:
+        0 0 5px #0f0,
+        0 0 10px #0f0,
+        0 0 20px #0f0,
+        0 0 40px #0f0,
+        0 0 60px #0f0;
+      letter-spacing: 0.1em;
+      animation: glowPulse 2s ease-in-out infinite;
+    }
+
+    @keyframes glowPulse {
+      0%, 100% {
+        text-shadow:
+          0 0 5px #0f0,
+          0 0 10px #0f0,
+          0 0 20px #0f0,
+          0 0 40px #0f0,
+          0 0 60px #0f0;
+      }
+      50% {
+        text-shadow:
+          0 0 2px #0f0,
+          0 0 5px #0f0,
+          0 0 10px #0f0,
+          0 0 20px #0f0;
+      }
+    }
+  </style>
 </head>
-
 <body>
-  <div id="clock">
-    <span id="hours">00</span>
-    <span id="colon1">:</span>
-    <span id="minutes">00</span>
-    <span id="colon2">:</span>
-    <span id="seconds">00</span>
-  </div>
-  <script src="script.js"></script>
-</body>
+  <div class="clock" id="clock">加载中...</div>
 
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+      const beijingTime = new Date(utc + 8 * 60 * 60 * 1000);
+
+      const hours = String(beijingTime.getHours()).padStart(2, '0');
+      const minutes = String(beijingTime.getMinutes()).padStart(2, '0');
+      const seconds = String(beijingTime.getSeconds()).padStart(2, '0');
+
+      document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
 </html>
