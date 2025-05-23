@@ -2,7 +2,10 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>北京时间 - LED风格</title>
+  <title>北京时间 - 方形LED数字</title>
+  <!-- 使用 DSEG7 经典风格 -->
+  <link href="https://cdn.jsdelivr.net/npm/dseg-fonts/webfont/dseg.css" rel="stylesheet" />
+
   <style>
     body {
       background-color: #000;
@@ -11,43 +14,39 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: 'Courier New', Courier, monospace;
     }
 
     .clock {
+      font-family: 'DSEG7Classic-Bold', monospace;
       font-size: 6em;
       color: #0f0;
       text-shadow:
+        0 0 3px #0f0,
         0 0 5px #0f0,
         0 0 10px #0f0,
-        0 0 20px #0f0,
-        0 0 40px #0f0,
-        0 0 60px #0f0;
-      letter-spacing: 0.1em;
-      animation: glowPulse 2s ease-in-out infinite;
+        0 0 20px #0f0;
+      animation: glow 2s ease-in-out infinite;
     }
 
-    @keyframes glowPulse {
+    @keyframes glow {
       0%, 100% {
         text-shadow:
-          0 0 5px #0f0,
-          0 0 10px #0f0,
-          0 0 20px #0f0,
-          0 0 40px #0f0,
-          0 0 60px #0f0;
-      }
-      50% {
-        text-shadow:
-          0 0 2px #0f0,
+          0 0 3px #0f0,
           0 0 5px #0f0,
           0 0 10px #0f0,
           0 0 20px #0f0;
+      }
+      50% {
+        text-shadow:
+          0 0 1px #0f0,
+          0 0 2px #0f0,
+          0 0 5px #0f0;
       }
     }
   </style>
 </head>
 <body>
-  <div class="clock" id="clock">加载中...</div>
+  <div class="clock" id="clock">88:88:88</div>
 
   <script>
     function updateClock() {
