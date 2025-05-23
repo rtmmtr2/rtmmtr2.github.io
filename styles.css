@@ -1,0 +1,22 @@
+#clock {
+  font-family: Arial, sans-serif;
+  font-size: 5em;
+  color: #00FF00; /* 绿色，类似LED显示颜色 */
+  text-shadow: 0 0 5px #00FF00, 0 0 10px #00FF00; /* 发光效果 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #000; /* 黑色背景 */
+}
+
+#colon1,
+#colon2 {
+  animation: blink 1s infinite; /* 冒号闪烁动画 */
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
