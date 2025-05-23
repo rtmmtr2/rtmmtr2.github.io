@@ -1,13 +1,22 @@
-function updateClock() {
-  const now = new Date();
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-
-  document.getElementById('hours').textContent = hours;
-  document.getElementById('minutes').textContent = minutes;
-  document.getElementById('seconds').textContent = seconds;
+#clock {
+  font-family: Arial, sans-serif;
+  font-size: 5em;
+  color: #00FF00; 
+  text-shadow: 0 0 5px #00FF00, 0 0 10px #00FF00; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #000; 
 }
 
-setInterval(updateClock, 1000);
-window.onload = updateClock;
+#colon1,
+#colon2 {
+  animation: blink 1s infinite; 
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
