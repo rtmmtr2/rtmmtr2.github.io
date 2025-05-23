@@ -4,22 +4,61 @@
   <meta charset="UTF-8">
   <title>北京时间</title>
   <link rel="stylesheet" href="../style.css">
+  <style>
+    body.light {
+      background: #fff;
+      color: #c00;
+    }
+    body.light #clock {
+      color: #c00;
+    }
+    body.light #date {
+      color: #c00;
+    }
+    body.light button {
+      border-color: #c00;
+      color: #c00;
+    }
+    #clock {
+      font-size: 10vw;
+      margin: 0.5em 0;
+      letter-spacing: 0.1em;
+    }
+    #date {
+      font-size: 2em;
+      margin-bottom: 1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>北京时间</h1>
+  <div id="date">0000-00-00</div>
+  <div id="clock">00:00:00</div>
+  <button onclick="toggleTheme()">切换主题</button>
+
   <script>
     function updateTime() {
       const now = new Date();
       const utc = now.getTime() + now.getTimezoneOffset() * 60000;
       const bj = new Date(utc + 8 * 3600000);
+
       const h = String(bj.getHours()).padStart(2, '0');
       const m = String(bj.getMinutes()).padStart(2, '0');
       const s = String(bj.getSeconds()).padStart(2, '0');
-      document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+      document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+
+      const y = bj.getFullYear();
+      const mon = String(bj.getMonth() + 1).padStart(2, '0');
+      const d = String(bj.getDate()).padStart(2, '0');
+      document.getElementById('date').textContent = `${y}-${mon}-${d}`;
     }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+    }
+
     setInterval(updateTime, 1000);
     window.onload = updateTime;
   </script>
-</head>
-<body>
-  <h1>北京时间</h1>
-  <div id="clock" style="font-size: 10vw; letter-spacing: 0.1em;">00:00:00</div>
 </body>
 </html>
