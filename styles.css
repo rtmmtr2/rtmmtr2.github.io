@@ -1,22 +1,19 @@
-#clock {
-  font-family: Arial, sans-serif;
-  font-size: 5em;
-  color: #00FF00; /* 绿色，类似LED显示颜色 */
-  text-shadow: 0 0 5px #00FF00, 0 0 10px #00FF00; /* 发光效果 */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #000; /* 黑色背景 */
+function updateClock() {
+  // 阿狸时间API获取北京时间
+  fetch('https://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp')
+   .then(response => response.json())
+   .then(data => {
+      const timestamp = data.data.t;
+      const date = new Date(timestamp * 1);
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+
+      document.getElementById('hours').textContent = hours;
+      document.getElementById('minutes').textContent = minutes;
+      document.getElementById('seconds').textContent = seconds;
+    });
 }
 
-#colon1,
-#colon2 {
-  animation: blink 1s infinite; /* 冒号闪烁动画 */
-}
-
-@keyframes blink {
-  50% {
-    opacity: 0;
-  }
-}
+setInterval(updateClock, 10000); // 每10秒更新一次（避免频繁请求接口）
+window.onload = updateClock;
