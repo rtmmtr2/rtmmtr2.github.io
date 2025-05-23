@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>倒计时</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <h1>倒计时</h1>
+  <div>
+    <input type="number" id="h" placeholder="小时" style="width: 4em;">
+    <input type="number" id="m" placeholder="分钟" style="width: 4em;">
+    <input type="number" id="s" placeholder="秒钟" style="width: 4em;">
+  </div>
+  <div>
+    <button onclick="start()">开始</button>
+    <button onclick="reset()">重置</button>
+  </div>
+  <div id="display" style="font-size: 10vw;">00:00:00</div>
+  <audio id="beep" src="../sounds/beep.ogg" preload="auto"></audio>
+  <script>
+    let total = 0, timer;
+    function format(t) {
+      const h = String(Math.floor(t / 3600)).padStart(2, '0');
+      const m = String(Math.floor((t % 3600) / 60)).padStart(2, '0');
+      const s = String(t % 60).padStart(2, '0');
+      return h + ':' + m + ':' + s;
+    }
+    function update() {
+      document.getElementById('display').textContent = format(total);
+    }
+    function start() {
+      const h = parseInt(document.getElementById('h').value) || 0;
+      const m = parseInt(document.getElementById('m').value) || 0;
+      const s = parseInt(document.getElementById('s').value) || 0;
+      total = h * 3600 + m * 60 + s;
+      update();
+      clearInterval(timer);
+      timer = setInterval(() => {
+        if (total > 0) {
+          total--;
+          update();
+        } else {
+          clearInterval(timer);
+          document.getElementById('beep').play();
+          alert("时间到！");
+        }
+      }, 1000);
+    }
+    function reset() {
+      clearInterval(timer);
+      total = 0;
+      update();
+    }
+    update();
+  </script>
+</body>
+</html>
