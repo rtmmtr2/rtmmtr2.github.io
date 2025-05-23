@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>秒表</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <h1>秒表</h1>
+  <div id="stopwatch" style="font-size: 10vw;">00:00:00</div>
+  <div>
+    <button onclick="start()">开始</button>
+    <button onclick="pause()">暂停</button>
+    <button onclick="reset()">重置</button>
+  </div>
+  <script>
+    let time = 0, running = false, interval;
+    function format(t) {
+      const h = String(Math.floor(t / 3600)).padStart(2, '0');
+      const m = String(Math.floor((t % 3600) / 60)).padStart(2, '0');
+      const s = String(t % 60).padStart(2, '0');
+      return h + ':' + m + ':' + s;
+    }
+    function update() {
+      document.getElementById('stopwatch').textContent = format(time);
+    }
+    function start() {
+      if (!running) {
+        interval = setInterval(() => { time++; update(); }, 1000);
+        running = true;
+      }
+    }
+    function pause() {
+      clearInterval(interval);
+      running = false;
+    }
+    function reset() {
+      pause();
+      time = 0;
+      update();
+    }
+    update();
+  </script>
+</body>
+</html>
