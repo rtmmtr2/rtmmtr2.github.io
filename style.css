@@ -1,0 +1,40 @@
+@font-face {
+  font-family: 'DSEG7Classic-Bold';
+  src: url('./fonts/DSEG7Classic-Bold.woff2') format('woff2'),
+       url('./fonts/DSEG7Classic-Bold.woff') format('woff'),
+       url('./fonts/DSEG7Classic-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+body {
+  margin: 0;
+  padding: 2em;
+  background: #000;
+  color: #0f0;
+  font-family: 'DSEG7Classic-Bold', monospace;
+  text-align: center;
+}
+
+h1 {
+  font-size: 3em;
+  margin-bottom: 1em;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+}
+
+.menu li {
+  margin: 1em 0;
+}
+
+.menu a {
+  font-size: 2em;
+  text-decoration: none;
+  color: #0f0;
+  border: 2px solid #0f0;
+  padding: 0.5em 1em;
+  display: inline-block;
+}
