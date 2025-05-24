@@ -1,1 +1,41 @@
-...
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>随机抽选（自定义）</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <h1>随机抽选</h1>
+  <textarea id="optionsInput" rows="6" cols="30" placeholder="请输入选项，用逗号或换行分隔"></textarea><br>
+  <button onclick="draw()">抽一个</button>
+  <h2 id="result">结果显示在这里</h2>
+  <button onclick="toggleTheme()">切换主题</button>
+  <div style="margin-top: 2em;">
+    <a href="../index.html"><button>返回主页</button></a>
+  </div>
+  <script>
+    function draw() {
+      const input = document.getElementById('optionsInput').value;
+      // 支持逗号或换行分割
+      let options = input.split(/[,\\n]+/).map(s => s.trim()).filter(s => s.length > 0);
+      if (options.length === 0) {
+        alert("请输入至少一个选项！");
+        return;
+      }
+      const index = Math.floor(Math.random() * options.length);
+      document.getElementById('result').textContent = options[index];
+    }
+
+    let themes = ["", "light", "blue", "light-blue", "light-black"];
+    let currentThemeIndex = 0;
+    function toggleTheme() {
+      document.body.classList.remove(...themes);
+      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+      if (themes[currentThemeIndex]) {
+        document.body.classList.add(themes[currentThemeIndex]);
+      }
+    }
+  </script>
+</body>
+</html>...
