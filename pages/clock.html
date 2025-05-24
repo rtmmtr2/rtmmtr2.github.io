@@ -9,16 +9,14 @@
   <h1 id="clock">00:00:00</h1>
   <h2 id="date">0000-00-00</h2>
   <button onclick="toggleTheme()">切换主题</button>
-  <div style="margin-top: 2em;"><a href="../index.html"><button>返回主页</button></a></div>
+  <div><a href="../index.html"><button>返回主页</button></a></div>
   <script>
     function updateClock() {
       const now = new Date();
       const utc = now.getTime() + now.getTimezoneOffset() * 60000;
       const bj = new Date(utc + 8 * 3600000);
-      const time = bj.toTimeString().split(" ")[0];
-      const date = bj.toISOString().split("T")[0];
-      document.getElementById("clock").textContent = time;
-      document.getElementById("date").textContent = date;
+      document.getElementById("clock").textContent = bj.toTimeString().split(" ")[0];
+      document.getElementById("date").textContent = bj.toISOString().split("T")[0];
     }
     setInterval(updateClock, 1000);
     updateClock();
@@ -28,10 +26,20 @@
     function toggleTheme() {
       document.body.classList.remove(...themes);
       currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-      if (themes[currentThemeIndex]) {
-        document.body.classList.add(themes[currentThemeIndex]);
+      const theme = themes[currentThemeIndex];
+      if (theme) {
+        document.body.classList.add(theme);
+        localStorage.setItem("theme", theme);
+      } else {
+        localStorage.removeItem("theme");
       }
+    }
+
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.body.classList.add(savedTheme);
+      currentThemeIndex = themes.indexOf(savedTheme);
     }
   </script>
 </body>
-</html>...
+</html>
