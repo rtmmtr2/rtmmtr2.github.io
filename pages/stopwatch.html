@@ -1,1 +1,52 @@
-...
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>秒表</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <h1 id="display">00:00:000</h1>
+  <button onclick="start()">开始</button>
+  <button onclick="stop()">停止</button>
+  <button onclick="reset()">重置</button>
+  <button onclick="toggleTheme()">切换主题</button>
+  <div style="margin-top: 2em;"><a href="../index.html"><button>返回主页</button></a></div>
+  <script>
+    let startTime, timerInterval;
+
+    function start() {
+      startTime = Date.now() - (window.elapsed || 0);
+      timerInterval = setInterval(() => {
+        const now = Date.now();
+        const elapsed = now - startTime;
+        window.elapsed = elapsed;
+        const minutes = String(Math.floor(elapsed / 60000)).padStart(2, '0');
+        const seconds = String(Math.floor((elapsed % 60000) / 1000)).padStart(2, '0');
+        const ms = String(elapsed % 1000).padStart(3, '0');
+        document.getElementById("display").textContent = `${minutes}:${seconds}:${ms}`;
+      }, 30);
+    }
+
+    function stop() {
+      clearInterval(timerInterval);
+    }
+
+    function reset() {
+      clearInterval(timerInterval);
+      window.elapsed = 0;
+      document.getElementById("display").textContent = "00:00:000";
+    }
+
+    let themes = ["", "light", "blue", "light-blue", "light-black"];
+    let currentThemeIndex = 0;
+    function toggleTheme() {
+      document.body.classList.remove(...themes);
+      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+      if (themes[currentThemeIndex]) {
+        document.body.classList.add(themes[currentThemeIndex]);
+      }
+    }
+  </script>
+</body>
+</html>...
