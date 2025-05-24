@@ -11,27 +11,23 @@
   <button onclick="stop()">停止</button>
   <button onclick="reset()">重置</button>
   <button onclick="toggleTheme()">切换主题</button>
-  <div style="margin-top: 2em;"><a href="../index.html"><button>返回主页</button></a></div>
+  <div><a href="../index.html"><button>返回主页</button></a></div>
   <script>
     let startTime, timerInterval;
-
     function start() {
       startTime = Date.now() - (window.elapsed || 0);
       timerInterval = setInterval(() => {
-        const now = Date.now();
-        const elapsed = now - startTime;
+        const elapsed = Date.now() - startTime;
         window.elapsed = elapsed;
-        const minutes = String(Math.floor(elapsed / 60000)).padStart(2, '0');
-        const seconds = String(Math.floor((elapsed % 60000) / 1000)).padStart(2, '0');
+        const m = String(Math.floor(elapsed / 60000)).padStart(2, '0');
+        const s = String(Math.floor((elapsed % 60000) / 1000)).padStart(2, '0');
         const ms = String(elapsed % 1000).padStart(3, '0');
-        document.getElementById("display").textContent = `${minutes}:${seconds}:${ms}`;
+        document.getElementById("display").textContent = `${m}:${s}:${ms}`;
       }, 30);
     }
-
     function stop() {
       clearInterval(timerInterval);
     }
-
     function reset() {
       clearInterval(timerInterval);
       window.elapsed = 0;
@@ -43,10 +39,19 @@
     function toggleTheme() {
       document.body.classList.remove(...themes);
       currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-      if (themes[currentThemeIndex]) {
-        document.body.classList.add(themes[currentThemeIndex]);
+      const theme = themes[currentThemeIndex];
+      if (theme) {
+        document.body.classList.add(theme);
+        localStorage.setItem("theme", theme);
+      } else {
+        localStorage.removeItem("theme");
       }
+    }
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.body.classList.add(savedTheme);
+      currentThemeIndex = themes.indexOf(savedTheme);
     }
   </script>
 </body>
-</html>...
+</html>
