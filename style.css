@@ -44,19 +44,25 @@ li {
   margin: 1em 0;
 }
 
-body.light {
-  background: #fff;
-  color: #c00;
+body.theme-white-blue    { background: #fff; color: #007bff; }
+body.theme-white-black   { background: #fff; color: #000; }
+body.theme-white-red     { background: #fff; color: #e60000; }
+
+body.theme-black-green   { background: #000; color: #00ff00; }
+body.theme-black-white   { background: #000; color: #fff; }
+body.theme-black-blue    { background: #000; color: #00aaff; }
+
+button, .btn {
+  border-radius: 0;
+  border: 2px solid currentColor;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 10px 20px;
+  font-size: 14px;
+  transition: background 0.2s, color 0.2s;
 }
-body.blue {
-  background: #001f3f;
-  color: #0ff;
-}
-body.light-blue {
-  background: #fff;
-  color: #00f;
-}
-body.light-black {
-  background: #fff;
-  color: #000;
+button:hover, .btn:hover {
+  background: currentColor;
+  color: #fff;
 }
