@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>工具主页</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
   <style>
     body {
       text-align: center;
       font-family: sans-serif;
       padding: 2rem;
+      background-color: #fff;
+      color: #000;
+      transition: background-color 0.3s, color 0.3s;
     }
     .menu {
       display: flex;
@@ -17,62 +20,119 @@
       gap: 1rem;
       margin-top: 2rem;
     }
-    .menu a button {
-      width: 180px;
-      height: 60px;
-      font-size: 16px;
-      border-radius: 0; /* 方形 */
-      border: 2px solid #444;
-      background-color: #000;
+    .btn {
+      width: 160px;
+      height: 50px;
+      font-size: 14px;
+      border-radius: 0;          /* 方形 */
+      border: 2px solid currentColor;  /* 边框颜色和文字颜色一致 */
+      background-color: transparent;
+      color: inherit;            /* 继承 body 颜色 */
       cursor: pointer;
-      transition: background 0.2s, color 0.2s;
+      transition: background-color 0.3s, color 0.3s;
     }
-    .menu a button:hover {
-      background-color: #ccc;
+    .btn:hover {
+      background-color: currentColor;
+      color: var(--btn-hover-text, #fff);
     }
     #theme-button {
       margin-top: 2rem;
       padding: 10px 20px;
-      font-size: 16px;
+      font-size: 14px;
       border-radius: 0;
-      border: 2px solid #444;
-      background: #000;
+      border: 2px solid currentColor;
+      background: transparent;
+      color: inherit;
       cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    #theme-button:hover {
+      background-color: currentColor;
+      color: var(--btn-hover-text, #fff);
+    }
+
+    /* 主题样式 */
+    body.light {
+      background-color: #fff;
+      color: #000;
+      --btn-hover-text: #000;
+    }
+    body.light .btn:hover,
+    body.light #theme-button:hover {
+      background-color: #000;
+      color: #fff;
+    }
+
+    body.blue {
+      background-color: #001f4d;
+      color: #aaf;
+      --btn-hover-text: #001f4d;
+    }
+    body.blue .btn:hover,
+    body.blue #theme-button:hover {
+      background-color: #aaf;
+      color: #001f4d;
+    }
+
+    body["light-blue"] {
+      background-color: #e0f0ff;
+      color: #004080;
+      --btn-hover-text: #e0f0ff;
+    }
+    body.light-blue .btn:hover,
+    body.light-blue #theme-button:hover {
+      background-color: #004080;
+      color: #e0f0ff;
+    }
+
+    body["light-black"] {
+      background-color: #222;
+      color: #ddd;
+      --btn-hover-text: #222;
+    }
+    body.light-black .btn:hover,
+    body.light-black #theme-button:hover {
+      background-color: #ddd;
+      color: #222;
     }
   </style>
 </head>
 <body>
   <h1>多功能工具主页</h1>
   <div class="menu">
-    <a href="pages/clock.html"><button>北京时间</button></a>
-    <a href="pages/stopwatch.html"><button>秒表</button></a>
-    <a href="pages/random.html"><button>随机抽选</button></a>
-    <a href="pages/alarm.html"><button>闹钟</button></a>
-    <a href="pages/function.html"><button>函数绘图</button></a>
+    <a href="pages/clock.html"><button class="btn">北京时间</button></a>
+    <a href="pages/stopwatch.html"><button class="btn">秒表</button></a>
+    <a href="pages/random.html"><button class="btn">随机抽选</button></a>
+    <a href="pages/alarm.html"><button class="btn">闹钟</button></a>
+    <a href="pages/function.html"><button class="btn">函数绘图</button></a>
   </div>
 
   <button id="theme-button" onclick="toggleTheme()">切换主题</button>
 
   <script>
-    let themes = ["", "light", "blue", "light-blue", "light-black"];
+    const themes = ["light", "blue", "light-blue", "light-black"];
+
     let currentThemeIndex = 0;
+
     function toggleTheme() {
-      document.body.classList.remove(...themes);
-      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-      const theme = themes[currentThemeIndex];
-      if (theme) {
-        document.body.classList.add(theme);
-        localStorage.setItem("theme", theme);
-      } else {
+      themes.forEach(t => document.body.classList.remove(t));
+      currentThemeIndex = (currentThemeIndex + 1) % (themes.length + 1);
+      if (currentThemeIndex === themes.length) {
+        // 无主题，移除所有主题类
         localStorage.removeItem("theme");
+      } else {
+        document.body.classList.add(themes[currentThemeIndex]);
+        localStorage.setItem("theme", themes[currentThemeIndex]);
       }
     }
 
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      document.body.classList.add(savedTheme);
-      currentThemeIndex = themes.indexOf(savedTheme);
-    }
+    window.onload = () => {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme && themes.includes(savedTheme)) {
+        document.body.classList.add(savedTheme);
+        currentThemeIndex = themes.indexOf(savedTheme);
+      }
+    };
   </script>
 </body>
 </html>
