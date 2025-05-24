@@ -5,24 +5,39 @@
   <title>工具主页</title>
   <link rel="stylesheet" href="style.css">
   <style>
+    body {
+      text-align: center;
+      font-family: sans-serif;
+      padding: 2rem;
+    }
     .menu {
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
       justify-content: center;
+      gap: 1rem;
       margin-top: 2rem;
     }
-    .menu button {
-      width: 160px;
+    .menu a button {
+      width: 180px;
       height: 60px;
       font-size: 16px;
-      border-radius: 0; /* 方形按钮 */
+      border-radius: 0; /* 方形 */
+      border: 2px solid #444;
+      background-color: #eee;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .menu a button:hover {
+      background-color: #ccc;
+    }
+    #theme-button {
+      margin-top: 2rem;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 0;
       border: 2px solid #444;
       background: #eee;
       cursor: pointer;
-    }
-    .menu a {
-      text-decoration: none;
     }
   </style>
 </head>
@@ -35,8 +50,8 @@
     <a href="pages/alarm.html"><button>闹钟</button></a>
     <a href="pages/function.html"><button>函数绘图</button></a>
   </div>
-  <br>
-  <button onclick="toggleTheme()">切换主题</button>
+
+  <button id="theme-button" onclick="toggleTheme()">切换主题</button>
 
   <script>
     let themes = ["", "light", "blue", "light-blue", "light-black"];
