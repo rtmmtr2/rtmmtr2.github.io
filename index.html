@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -8,12 +7,34 @@
 </head>
 <body>
   <h1>LED 风格工具集</h1>
-  <ul>
-    <li><a href="pages/clock.html">北京时间</a></li>
-    <li><a href="pages/stopwatch.html">秒表</a></li>
-    <li><a href="pages/random.html">随机抽选</a></li>
-    <li><a href="pages/alarm.html">闹钟</a></li>
-    <li><a href="pages/countdown.html">计时器</a></li>
-  </ul>
+  <div>
+    <button onclick="location.href='pages/clock.html'">北京时间</button>
+    <button onclick="location.href='pages/stopwatch.html'">秒表</button>
+    <button onclick="location.href='pages/random.html'">随机抽选</button>
+    <button onclick="location.href='pages/alarm.html'">闹钟</button>
+  </div>
+  <button onclick="toggleTheme()">切换主题</button>
+  <script>
+    let themes = ["", "light", "blue", "light-blue", "light-black"];
+    let currentThemeIndex = 0;
+    function toggleTheme() {
+      document.body.classList.remove(...themes);
+      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+      const theme = themes[currentThemeIndex];
+      if (theme) {
+        document.body.classList.add(theme);
+        localStorage.setItem("theme", theme);
+      } else {
+        localStorage.removeItem("theme");
+      }
+    }
+
+    // 初始化主题
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.body.classList.add(savedTheme);
+      currentThemeIndex = themes.indexOf(savedTheme);
+    }
+  </script>
 </body>
 </html>
