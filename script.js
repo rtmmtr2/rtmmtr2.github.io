@@ -1,4 +1,4 @@
-const themes = ["light", "blue", "light-blue", "light-black"];
+const themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green","theme-black-blue","theme-black-white"];
 
 let currentThemeIndex = 0;
 
