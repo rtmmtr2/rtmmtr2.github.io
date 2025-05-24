@@ -2,18 +2,42 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>LED 工具集</title>
+  <title>工具主页</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .menu {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+    .menu button {
+      width: 160px;
+      height: 60px;
+      font-size: 16px;
+      border-radius: 0; /* 方形按钮 */
+      border: 2px solid #444;
+      background: #eee;
+      cursor: pointer;
+    }
+    .menu a {
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-  <h1>LED 风格工具集</h1>
-  <div>
-    <button onclick="location.href='pages/clock.html'">北京时间</button>
-    <button onclick="location.href='pages/stopwatch.html'">秒表</button>
-    <button onclick="location.href='pages/random.html'">随机抽选</button>
-    <button onclick="location.href='pages/alarm.html'">闹钟</button>
+  <h1>多功能工具主页</h1>
+  <div class="menu">
+    <a href="pages/clock.html"><button>北京时间</button></a>
+    <a href="pages/stopwatch.html"><button>秒表</button></a>
+    <a href="pages/random.html"><button>随机抽选</button></a>
+    <a href="pages/alarm.html"><button>闹钟</button></a>
+    <a href="pages/function.html"><button>函数绘图</button></a>
   </div>
+  <br>
   <button onclick="toggleTheme()">切换主题</button>
+
   <script>
     let themes = ["", "light", "blue", "light-blue", "light-black"];
     let currentThemeIndex = 0;
@@ -29,7 +53,6 @@
       }
     }
 
-    // 初始化主题
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
       document.body.classList.add(savedTheme);
