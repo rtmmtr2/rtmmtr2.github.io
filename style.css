@@ -1,8 +1,11 @@
-
+@font-face {
+  font-family: 'LED';
+  src: url('fonts/led.ttf') format('truetype');
+}
 body {
   background: #000;
   color: #0f0;
-  font-family: 'Courier New', monospace;
+  font-family: 'LED', monospace;
   text-align: center;
   padding: 2em;
   transition: all 0.3s ease;
