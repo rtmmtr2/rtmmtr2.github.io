@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>函数绘图</title>
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    canvas {
+      border: 1px solid #333;
+      background: #fff;
+      margin-top: 10px;
+    }
+    #controls {
+      margin-bottom: 10px;
+    }
+    input {
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1>函数绘图器</h1>
+  <div id="controls">
+    函数表达式 y = <input type="text" id="expression" placeholder="例如 sin(x) 或 x^2" value="sin(x)">
+    <button onclick="drawFunction()">绘图</button>
+    <button onclick="toggleTheme()">切换主题</button>
+    <a href="../index.html"><button>返回主页</button></a>
+  </div>
+  <canvas id="graph" width="800" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("graph");
+    const ctx = canvas.getContext("2d");
+    const width = canvas.width;
+    const height = canvas.height;
+    const originX = width / 2;
+    const originY = height / 2;
+    const xScale = 40;
+    const yScale = 40;
+
+    function drawFunction() {
+      const expr = document.getElementById("expression").value;
+      let fn;
+      try {
+        fn = math.compile(expr);
+      } catch (e) {
+        alert("表达式有误，请重新输入！");
+        return;
+      }
+
+      // 清除画布
+      ctx.clearRect(0, 0, width, height);
+
+      // 坐标轴
+      ctx.beginPath();
+      ctx.moveTo(0, originY);
+      ctx.lineTo(width, originY);
+      ctx.moveTo(originX, 0);
+      ctx.lineTo(originX, height);
+      ctx.strokeStyle = "#000";
+      ctx.stroke();
+
+      // 绘图
+      ctx.beginPath();
+      let started = false;
+      for (let px = 0; px < width; px++) {
+        const x = (px - originX) / xScale;
+        let y;
+        try {
+          y = fn.evaluate({ x });
+        } catch {
+          continue;
+        }
+        const py = originY - y * yScale;
+        if (!started) {
+          ctx.moveTo(px, py);
+          started = true;
+        } else {
+          ctx.lineTo(px, py);
+        }
+      }
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // 主题切换
+    let themes = ["", "light", "blue", "light-blue", "light-black"];
+    let currentThemeIndex = 0;
+    function toggleTheme() {
+      document.body.classList.remove(...themes);
+      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+      const theme = themes[currentThemeIndex];
+      if (theme) {
+        document.body.classList.add(theme);
+        localStorage.setItem("theme", theme);
+      } else {
+        localStorage.removeItem("theme");
+      }
+    }
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.body.classList.add(savedTheme);
+      currentThemeIndex = themes.indexOf(savedTheme);
+    }
+
+    // 默认绘图
+    drawFunction();
+  </script>
+</body>
+</html>
