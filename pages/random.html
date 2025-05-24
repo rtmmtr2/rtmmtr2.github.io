@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>随机抽选（自定义）</title>
+  <title>随机抽选</title>
   <link rel="stylesheet" href="../style.css">
 </head>
 <body>
@@ -11,13 +11,10 @@
   <button onclick="draw()">抽一个</button>
   <h2 id="result">结果显示在这里</h2>
   <button onclick="toggleTheme()">切换主题</button>
-  <div style="margin-top: 2em;">
-    <a href="../index.html"><button>返回主页</button></a>
-  </div>
+  <div><a href="../index.html"><button>返回主页</button></a></div>
   <script>
     function draw() {
       const input = document.getElementById('optionsInput').value;
-      // 支持逗号或换行分割
       let options = input.split(/[,\\n]+/).map(s => s.trim()).filter(s => s.length > 0);
       if (options.length === 0) {
         alert("请输入至少一个选项！");
@@ -32,10 +29,19 @@
     function toggleTheme() {
       document.body.classList.remove(...themes);
       currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-      if (themes[currentThemeIndex]) {
-        document.body.classList.add(themes[currentThemeIndex]);
+      const theme = themes[currentThemeIndex];
+      if (theme) {
+        document.body.classList.add(theme);
+        localStorage.setItem("theme", theme);
+      } else {
+        localStorage.removeItem("theme");
       }
+    }
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.body.classList.add(savedTheme);
+      currentThemeIndex = themes.indexOf(savedTheme);
     }
   </script>
 </body>
-</html>...
+</html>
