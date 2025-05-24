@@ -2,6 +2,7 @@
   font-family: 'LED';
   src: url('fonts/DSEG7Classic-Bold.ttf') format('truetype');
 }
+
 body {
   background: #000;
   color: #0f0;
@@ -10,10 +11,12 @@ body {
   padding: 2em;
   transition: all 0.3s ease;
 }
+
 a {
   color: inherit;
   text-decoration: none;
 }
+
 button {
   background: transparent;
   border: 2px solid currentColor;
@@ -22,21 +25,25 @@ button {
   padding: 0.5em 1.5em;
   margin: 0.5em;
   cursor: pointer;
-  border-radius: 1em;
+  border-radius: 0;
   transition: 0.2s ease;
   box-shadow: 0 0 8px currentColor;
 }
+
 button:hover {
   background: currentColor;
   color: #000;
 }
+
 ul {
   list-style: none;
   padding: 0;
 }
+
 li {
   margin: 1em 0;
 }
+
 body.light {
   background: #fff;
   color: #c00;
