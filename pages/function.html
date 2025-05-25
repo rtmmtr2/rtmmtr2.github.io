@@ -2,222 +2,142 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>函数绘图</title>
-  <link rel="stylesheet" href="../style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjs@11/lib/browser/math.js"></script>
-  <style>
-    :root {
-      --bg-color: white;
-      --text-color: blue;
-      --button-bg: #ddd;
-      --button-text: black;
-    }
-
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-family: monospace;
-      text-align: center;
-      padding: 20px;
-    }
-
-    input, select, button {
-      font-size: 16px;
-      margin: 5px;
-      padding: 5px 10px;
-      border-radius: 0;
-      border: 1px solid var(--text-color);
-      background-color: var(--button-bg);
-      color: var(--button-text);
-    }
-
-    canvas {
-      margin-top: 20px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
-<body onload="initTheme()">
+<body>
   <h1>函数绘图</h1>
-  <select id="theme-selector" onchange="changeTheme()">
-    <option value="white-blue">白底蓝字</option>
-    <option value="white-black">白底黑字</option>
-    <option value="white-red">白底红字</option>
-    <option value="black-green">黑底绿色</option>
-    <option value="black-white">黑底白色</option>
-    <option value="black-blue">黑底蓝色</option>
-  </select>
 
-  <input type="text" id="expression" placeholder="例如 sin(pi*x), x^2, 1/2pi 等" />
-  <button onclick="drawFunction()">绘图</button>
-  <a href="../index.html"><button>返回主页</button></a>
-  <canvas id="graph" width="600" height="400"></canvas>
+  <input type="text" id="functionInput" placeholder="输入函数，例如 sin(x), cos(x), x^2" />
+  <button onclick="drawGraph()">绘图</button>
+  <button onclick="cycleTheme()">切换主题</button>
+  <button onclick="location.href='index.html'">返回主页</button>
 
-  <div id="analysis">
-    <h3>函数分析</h3>
-    <p id="period">最小正周期：--</p>
-    <p id="monotonicity">单调性：--</p>
-    <p id="inc-intervals">递增区间：--</p>
-    <p id="dec-intervals">递减区间：--</p>
-    <p id="symmetry">对称性：--</p>
-  </div>
+  <div id="graph" style="width:100%;height:400px;margin-top:20px;"></div>
+  <div id="info"></div>
 
   <script>
-    let chart = null;
+    const themes = [
+      ["white", "blue", "#ddd", "black"],
+      ["white", "black", "#ddd", "black"],
+      ["white", "red", "#ddd", "black"],
+      ["black", "lime", "#333", "white"],
+      ["black", "white", "#333", "white"],
+      ["black", "cyan", "#333", "white"]
+    ];
 
-    const themeMap = {
-      "white-blue": ["white", "blue", "#ddd", "black"],
-      "white-black": ["white", "black", "#ddd", "black"],
-      "white-red": ["white", "red", "#ddd", "black"],
-      "black-green": ["black", "lime", "#222", "white"],
-      "black-white": ["black", "white", "#333", "white"],
-      "black-blue": ["black", "cyan", "#333", "white"]
-    };
-
-    function initTheme() {
-      const theme = localStorage.getItem("theme") || "white-blue";
-      document.getElementById("theme-selector").value = theme;
-      applyTheme(theme);
-    }
-
-    function changeTheme() {
-      const theme = document.getElementById("theme-selector").value;
-      localStorage.setItem("theme", theme);
-      applyTheme(theme);
-    }
-
-    function applyTheme(theme) {
-      const [bg, text, btnBg, btnText] = themeMap[theme];
+    let themeIndex = 0;
+    function applyTheme(index) {
+      const [bg, text, btnBg, btnColor] = themes[index];
       document.documentElement.style.setProperty('--bg-color', bg);
       document.documentElement.style.setProperty('--text-color', text);
-      document.documentElement.style.setProperty('--button-bg', btnBg);
-      document.documentElement.style.setProperty('--button-text', btnText);
+      document.documentElement.style.setProperty('--btn-bg', btnBg);
+      document.documentElement.style.setProperty('--btn-color', btnColor);
+      localStorage.setItem("themeIndex", index);
     }
 
-    function preprocessExpression(expr) {
-      return expr
-        .replace(/π/g, "pi")
-        .replace(/([0-9])pi/g, (_, n) => `${n}*pi`)      // e.g. 2pi => 2*pi
-        .replace(/pi([a-zA-Z])/g, "pi*$1")                // e.g. pi*x => pi*x
-        .replace(/([a-zA-Z])pi/g, "$1*pi");               // e.g. xpi => x*pi
+    function cycleTheme() {
+      themeIndex = (themeIndex + 1) % themes.length;
+      applyTheme(themeIndex);
     }
 
-    function drawFunction() {
-      const input = document.getElementById("expression").value;
-      if (!input) return;
+    function loadSavedTheme() {
+      themeIndex = parseInt(localStorage.getItem("themeIndex")) || 0;
+      applyTheme(themeIndex);
+    }
 
-      const expr = preprocessExpression(input);
-      try {
-        const compiled = math.compile(expr);
-        const xData = [], yData = [];
+    window.addEventListener('DOMContentLoaded', loadSavedTheme);
 
-        for (let x = -10; x <= 10; x += 0.1) {
-          xData.push(x.toFixed(2));
-          const y = compiled.evaluate({ x });
-          yData.push(Number.isFinite(y) ? y : null);
+    function formatPiFraction(value, tolerance = 0.01) {
+      const pi = Math.PI;
+      const ratio = value / pi;
+      for (let d = 1; d <= 24; d++) {
+        let n = Math.round(ratio * d);
+        if (Math.abs(n / d - ratio) < tolerance) {
+          if (n === 0) return "0";
+          if (d === 1) return n === 1 ? "π" : `${n}π`;
+          if (n === 1) return `π/${d}`;
+          return `${n}π/${d}`;
         }
-
-        if (chart) chart.destroy();
-        chart = new Chart(document.getElementById("graph"), {
-          type: "line",
-          data: {
-            labels: xData,
-            datasets: [{
-              label: input,
-              data: yData,
-              borderColor: "blue",
-              fill: false,
-              tension: 0.1
-            }]
-          },
-          options: {
-            responsive: false,
-            scales: {
-              x: { title: { display: true, text: "x" }},
-              y: { title: { display: true, text: "f(x)" }}
-            }
-          }
-        });
-
-        analyzeFunction(expr);
-      } catch (err) {
-        alert("表达式无效：" + err.message);
       }
+      return value.toFixed(3);
     }
 
-    function analyzeFunction(exprStr) {
-      try {
-        const f = math.compile(exprStr);
-        const fx = x => f.evaluate({ x });
+    function drawGraph() {
+      const expr = document.getElementById("functionInput").value;
+      const x = [], y = [];
+      const mathExpr = expr.replaceAll('^', '**');
+      const fn = new Function('x', `return ${mathExpr};`);
 
-        const xVals = [], yVals = [];
-        for (let x = -10; x <= 10; x += 0.1) {
-          xVals.push(x);
-          yVals.push(fx(x));
+      for (let i = -10; i <= 10; i += 0.01) {
+        try {
+          x.push(i);
+          y.push(fn(i));
+        } catch {
+          x.push(i);
+          y.push(null);
         }
+      }
 
-        // 周期判断
-        let period = "--";
-        for (let t = 0.1; t < 10; t += 0.1) {
-          let same = true;
-          for (let x = -3; x < 3; x += 0.1) {
-            if (Math.abs(fx(x) - fx(x + t)) > 0.05) {
-              same = false;
-              break;
-            }
-          }
-          if (same) {
-            period = t.toFixed(2);
+      Plotly.newPlot('graph', [{ x, y, type: 'scatter', mode: 'lines', name: expr }],
+        { margin: { t: 20 } });
+
+      analyzeFunction(fn);
+    }
+
+    function analyzeFunction(fn) {
+      let info = "";
+
+      try {
+        // 周期性检测：f(x) ≈ f(x + T)
+        const sampleX = 1;
+        const f1 = fn(sampleX);
+        let T = null;
+        for (let t = 0.1; t <= 10; t += 0.01) {
+          const diff = Math.abs(fn(sampleX + t) - f1);
+          if (diff < 0.01) {
+            T = t;
             break;
           }
         }
+        if (T) info += `最小正周期 T ≈ ${formatPiFraction(T)}<br/>`;
 
-        // 单调区间
-        let inc = [], dec = [];
-        let start = xVals[0], state = null;
-
-        for (let i = 1; i < xVals.length; i++) {
-          const d = yVals[i] - yVals[i - 1];
-          const trend = d > 0 ? "inc" : d < 0 ? "dec" : state;
-          if (trend !== state && state !== null) {
-            const end = xVals[i - 1];
-            (state === "inc" ? inc : dec).push([start, end]);
-            start = xVals[i - 1];
+        // 单调区间检测
+        let increasing = [], decreasing = [], last = fn(-10), start = -10;
+        for (let i = -10; i <= 10; i += 0.2) {
+          const curr = fn(i);
+          if (curr > last) {
+            if (decreasing.length && i - decreasing[decreasing.length - 1][1] > 0.5)
+              decreasing.push([start, i]);
+            start = i;
+            last = curr;
+          } else if (curr < last) {
+            if (increasing.length && i - increasing[increasing.length - 1][1] > 0.5)
+              increasing.push([start, i]);
+            start = i;
+            last = curr;
           }
-          state = trend;
         }
 
-        if (state === "inc") inc.push([start, xVals[xVals.length - 1]]);
-        if (state === "dec") dec.push([start, xVals[xVals.length - 1]]);
-
-        const format = list => list.map(([a, b]) => `[${a.toFixed(1)}, ${b.toFixed(1)}]`).join("，");
+        if (increasing.length)
+          info += "单调递增区间：" + increasing.map(p => `[${p[0].toFixed(1)}, ${p[1].toFixed(1)}]`).join(" ") + "<br/>";
+        if (decreasing.length)
+          info += "单调递减区间：" + decreasing.map(p => `[${p[0].toFixed(1)}, ${p[1].toFixed(1)}]`).join(" ") + "<br/>";
 
         // 对称性检测
-        let symmetry = "不确定";
-        for (let c = -5; c <= 5; c += 0.5) {
-          let even = true, odd = true;
-          for (let x = -2; x <= 2; x += 0.2) {
-            if (Math.abs(fx(c + x) - fx(c - x)) > 0.05) even = false;
-            if (Math.abs(fx(c + x) + fx(c - x)) > 0.05) odd = false;
-          }
-          if (even) {
-            symmetry = `关于 x=${c} 对称`;
-            break;
-          }
-          if (odd) {
-            symmetry = `关于 (${c}, ${fx(c).toFixed(2)}) 中心对称`;
-            break;
-          }
-        }
+        const f0 = fn(0);
+        const symmetric = Math.abs(fn(-1) - fn(1)) < 0.01;
+        if (symmetric) info += "关于 y 轴对称<br/>";
 
-        document.getElementById("period").innerText = "最小正周期：" + period;
-        document.getElementById("monotonicity").innerText = inc.length >= dec.length ? "单调递增" : "单调递减";
-        document.getElementById("inc-intervals").innerText = "递增区间：" + format(inc);
-        document.getElementById("dec-intervals").innerText = "递减区间：" + format(dec);
-        document.getElementById("symmetry").innerText = "对称性：" + symmetry;
-      } catch (e) {
-        console.warn("分析失败：" + e.message);
+        const center = fn(2) + fn(-2) - 2 * f0;
+        if (Math.abs(center) < 0.01) info += "关于原点中心对称<br/>";
+      } catch {
+        info += "函数分析失败。";
       }
+
+      document.getElementById("info").innerHTML = info;
     }
   </script>
 </body>
