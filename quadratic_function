@@ -1,0 +1,53 @@
+<!DOCTYPE html><html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>二次函数求解器</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    input { width: 60px; margin: 5px; }
+    #result { margin-top: 15px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h1>二次函数求解器</h1>
+  <p>形式为 ax² + bx + c = 0</p>
+  <div>
+    a = <input type="number" id="a" value="1">
+    b = <input type="number" id="b" value="-3">
+    c = <input type="number" id="c" value="2">
+    <button onclick="solveQuadratic()">求解</button>
+    <a href="../index.html"><button>返回主页</button></a>
+  </div>
+  <div id="result"></div>  <script>
+    function solveQuadratic() {
+      const a = parseFloat(document.getElementById("a").value);
+      const b = parseFloat(document.getElementById("b").value);
+      const c = parseFloat(document.getElementById("c").value);
+      const result = document.getElementById("result");
+
+      if (a === 0) {
+        result.innerHTML = "这不是一个二次方程 (a 不能为 0)。";
+        return;
+      }
+
+      const delta = b * b - 4 * a * c;
+      let output = `Δ = ${delta}<br>`;
+
+      if (delta > 0) {
+        const x1 = (-b + Math.sqrt(delta)) / (2 * a);
+        const x2 = (-b - Math.sqrt(delta)) / (2 * a);
+        output += `有两个不相等实根：<br>x₁ = ${x1}<br>x₂ = ${x2}`;
+      } else if (delta === 0) {
+        const x = -b / (2 * a);
+        output += `有一个实数根（重根）：<br>x = ${x}`;
+      } else {
+        const real = -b / (2 * a);
+        const imag = Math.sqrt(-delta) / (2 * a);
+        output += `有两个共轭虚根：<br>x₁ = ${real} + ${imag}i<br>x₂ = ${real} - ${imag}i`;
+      }
+
+      result.innerHTML = output;
+    }
+  </script></body>
+</html>
