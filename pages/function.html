@@ -8,18 +8,32 @@
   <script src="https://cdn.jsdelivr.net/npm/mathjs@11/lib/browser/math.js"></script>
 </head>
 <body onload="applyTheme()">
+  <div class="top-bar">
+    <select id="theme-selector" onchange="setTheme(this.value)">
+      <option value="white-blue">白底蓝字</option>
+      <option value="white-black">白底黑字</option>
+      <option value="white-red">白底红字</option>
+      <option value="black-green">黑底绿字</option>
+      <option value="black-white">黑底白字</option>
+      <option value="black-blue">黑底蓝字</option>
+    </select>
+  </div>
+
   <h1>函数绘图</h1>
   <input type="text" id="expression" placeholder="请输入函数，如 sin(x), x^2 等" />
   <button onclick="drawFunction()">绘图</button>
-  <button onclick="toggleTheme()">切换主题</button>
   <a href="../index.html"><button>返回主页</button></a>
   <canvas id="graph" width="600" height="400"></canvas>
+
   <div id="analysis">
     <h3>函数分析结果</h3>
     <p id="period">最小正周期：--</p>
     <p id="monotonicity">单调性：--</p>
+    <p id="inc-intervals">单调递增区间：--</p>
+    <p id="dec-intervals">单调递减区间：--</p>
     <p id="symmetry">对称性：--</p>
   </div>
+
   <script src="../theme.js"></script>
   <script>
     let myChart = null;
@@ -32,6 +46,7 @@
         const compiled = math.compile(exprStr);
         const labels = [];
         const data = [];
+
         for (let x = -10; x <= 10; x += 0.1) {
           labels.push(x.toFixed(2));
           let y = compiled.evaluate({ x });
@@ -70,10 +85,15 @@
       try {
         const compiled = math.compile(exprStr);
         const f = x => compiled.evaluate({ x });
-        const sampleX = math.range(-10, 10, 0.1).toArray();
-        const sampleY = sampleX.map(f);
 
-        // 周期性估算
+        const xVals = [];
+        const yVals = [];
+        for (let x = -10; x <= 10; x += 0.1) {
+          xVals.push(x);
+          yVals.push(f(x));
+        }
+
+        // 周期估算
         let period = "--";
         for (let t = 0.1; t < 20; t += 0.1) {
           let match = true;
@@ -89,15 +109,33 @@
           }
         }
 
-        // 单调性估算
-        let inc = 0, dec = 0;
-        for (let i = 1; i < sampleY.length; i++) {
-          if (sampleY[i] > sampleY[i - 1]) inc++;
-          else if (sampleY[i] < sampleY[i - 1]) dec++;
-        }
-        let mono = inc > dec ? "增函数" : dec > inc ? "减函数" : "不单调";
+        // 单调性区间
+        let incIntervals = [], decIntervals = [];
+        let start = xVals[0];
+        let increasing = null;
 
-        // 对称性估算
+        for (let i = 1; i < xVals.length; i++) {
+          const x0 = xVals[i - 1], x1 = xVals[i];
+          const y0 = yVals[i - 1], y1 = yVals[i];
+
+          let current = y1 > y0 ? 'inc' : y1 < y0 ? 'dec' : null;
+          if (current !== increasing) {
+            if (increasing === 'inc') incIntervals.push([start, x0]);
+            else if (increasing === 'dec') decIntervals.push([start, x0]);
+            start = x0;
+            increasing = current;
+          }
+        }
+        if (increasing === 'inc') incIntervals.push([start, xVals[xVals.length - 1]]);
+        if (increasing === 'dec') decIntervals.push([start, xVals[xVals.length - 1]]);
+
+        const formatIntervals = arr => arr.map(([a, b]) => `[${a.toFixed(1)}, ${b.toFixed(1)}]`).join("，");
+
+        // 单调性总体
+        let mono = incIntervals.length > decIntervals.length ? "增函数" :
+                   decIntervals.length > incIntervals.length ? "减函数" : "不单调";
+
+        // 对称性
         let symmetry = "不确定";
         for (let c = -5; c <= 5; c += 0.5) {
           let even = true, odd = true;
@@ -116,10 +154,24 @@
 
         document.getElementById("period").innerText = "最小正周期：" + period;
         document.getElementById("monotonicity").innerText = "单调性：" + mono;
+        document.getElementById("inc-intervals").innerText = "单调递增区间：" + formatIntervals(incIntervals);
+        document.getElementById("dec-intervals").innerText = "单调递减区间：" + formatIntervals(decIntervals);
         document.getElementById("symmetry").innerText = "对称性：" + symmetry;
       } catch (err) {
         console.warn("函数分析失败：", err.message);
       }
+    }
+
+    // 主题切换
+    function applyTheme() {
+      const theme = localStorage.getItem("theme") || "white-blue";
+      document.body.className = theme;
+      document.getElementById("theme-selector").value = theme;
+    }
+
+    function setTheme(theme) {
+      localStorage.setItem("theme", theme);
+      document.body.className = theme;
     }
   </script>
 </body>
