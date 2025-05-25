@@ -17,6 +17,11 @@
     input {
       width: 300px;
     }
+    #info {
+      margin-top: 10px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
   </style>
 </head>
 <body>
@@ -28,6 +33,7 @@
     <a href="../index.html"><button>返回主页</button></a>
   </div>
   <canvas id="graph" width="800" height="400"></canvas>
+  <div id="info"></div>
 
   <script>
     const canvas = document.getElementById("graph");
@@ -41,10 +47,7 @@
 
     function drawFunction() {
       const rawExpr = document.getElementById("expression").value;
-
-      // 替换 π 为 pi，ln 为 log（math.js 用 log 代表 ln，自然对数）
       const expr = rawExpr.replace(/π/g, "pi").replace(/\bln\b/g, "log");
-
       let fn;
       try {
         fn = math.compile(expr);
@@ -53,8 +56,9 @@
         return;
       }
 
-      // 清除画布
+      // 清除画布和信息
       ctx.clearRect(0, 0, width, height);
+      document.getElementById("info").textContent = "";
 
       // 坐标轴
       ctx.beginPath();
@@ -65,19 +69,26 @@
       ctx.strokeStyle = "#000";
       ctx.stroke();
 
-      // 绘图
+      // 绘图 + 收集采样点
       ctx.beginPath();
       let started = false;
+      const samples = [];
       for (let px = 0; px < width; px++) {
         const x = (px - originX) / xScale;
         let y;
         try {
           y = fn.evaluate({ x });
-          if (!isFinite(y)) continue; // 排除无穷和NaN
+          if (!isFinite(y)) {
+            samples.push({ x, y: null });
+            continue;
+          }
         } catch {
+          samples.push({ x, y: null });
           continue;
         }
         const py = originY - y * yScale;
+        samples.push({ x, y });
+
         if (!started) {
           ctx.moveTo(px, py);
           started = true;
@@ -88,10 +99,70 @@
       ctx.strokeStyle = "blue";
       ctx.lineWidth = 2;
       ctx.stroke();
+
+      analyzeFunction(expr, samples);
+    }
+
+    // 分析函数性质
+    function analyzeFunction(expr, samples) {
+      let info = `函数表达式: y = ${expr.replace(/pi/g, "π")}\n`;
+
+      const values = samples.filter(p => p.y !== null);
+      const xs = values.map(p => p.x);
+      const ys = values.map(p => p.y);
+
+      // 判断是否为奇函数、偶函数（对称）
+      let isOdd = true, isEven = true;
+      for (let i = 0; i < xs.length; i++) {
+        const x = xs[i], y = ys[i];
+        const idx = xs.findIndex(v => Math.abs(v + x) < 1e-2);
+        if (idx === -1) continue;
+        const yNeg = ys[idx];
+        if (Math.abs(y + yNeg) > 0.1) isOdd = false;
+        if (Math.abs(y - yNeg) > 0.1) isEven = false;
+      }
+      if (isEven) info += "对称性: 偶函数，关于 y 轴对称\n";
+      else if (isOdd) info += "对称性: 奇函数，关于原点对称\n";
+      else info += "对称性: 无明显对称性\n";
+
+      // 简单判断周期
+      if (/sin|cos|tan/.test(expr)) {
+        if (/tan/.test(expr)) info += "最小正周期 T ≈ π\n";
+        else info += "最小正周期 T ≈ 2π\n";
+      }
+
+      // 单调区间（粗略计算）
+      let increasing = [], decreasing = [];
+      for (let i = 1; i < values.length; i++) {
+        const prev = values[i - 1], curr = values[i];
+        if (prev.y === null || curr.y === null) continue;
+        if (curr.y > prev.y) {
+          if (increasing.length === 0 || curr.x - increasing[increasing.length - 1][1] > 0.5)
+            increasing.push([prev.x, curr.x]);
+          else
+            increasing[increasing.length - 1][1] = curr.x;
+        } else if (curr.y < prev.y) {
+          if (decreasing.length === 0 || curr.x - decreasing[decreasing.length - 1][1] > 0.5)
+            decreasing.push([prev.x, curr.x]);
+          else
+            decreasing[decreasing.length - 1][1] = curr.x;
+        }
+      }
+
+      if (increasing.length) {
+        info += "单调递增区间（近似）:\n";
+        increasing.forEach(r => info += `  (${r[0].toFixed(2)}, ${r[1].toFixed(2)})\n`);
+      }
+      if (decreasing.length) {
+        info += "单调递减区间（近似）:\n";
+        decreasing.forEach(r => info += `  (${r[0].toFixed(2)}, ${r[1].toFixed(2)})\n`);
+      }
+
+      document.getElementById("info").textContent = info;
     }
 
     // 切换主题
-    let themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green","theme-black-blue","theme-black-white"];
+    let themes = ["", "light", "blue", "light-blue", "light-black"];
     let currentThemeIndex = 0;
     function toggleTheme() {
       document.body.classList.remove(...themes);
@@ -112,7 +183,6 @@
       currentThemeIndex = themes.indexOf(savedTheme);
     }
 
-    // 默认绘图
     drawFunction();
   </script>
 </body>
