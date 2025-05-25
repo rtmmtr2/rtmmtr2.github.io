@@ -1,25 +1,160 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>函数绘图</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    canvas {
+      border: 1px solid #333;
+      background: #fff;
+      margin-top: 10px;
+    }
+    #controls {
+      margin-bottom: 10px;
+    }
+    input {
+      width: 300px;
+    }
+    #info {
+      margin-top: 15px;
+      line-height: 1.6;
+    }
+  </style>
 </head>
 <body>
-  <h1>函数绘图</h1>
-
-  <input type="text" id="functionInput" placeholder="输入函数，例如 sin(x), cos(x), x^2" />
-  <button onclick="drawGraph()">绘图</button>
-  <button onclick="cycleTheme()">切换主题</button>
-  <button onclick="location.href='index.html'">返回主页</button>
-
-  <div id="graph" style="width:100%;height:400px;margin-top:20px;"></div>
+  <h1>函数绘图器</h1>
+  <div id="controls">
+    函数表达式 y = <input type="text" id="expression" placeholder="例如 sin(x) 或 x^2" value="sin(x)">
+    <button onclick="drawFunction()">绘图</button>
+    <button onclick="toggleTheme()">切换主题</button>
+    <a href="../index.html"><button>返回主页</button></a>
+  </div>
+  <canvas id="graph" width="800" height="400"></canvas>
   <div id="info"></div>
 
   <script>
-    let themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green","theme-black-blue","theme-black-white"];
+    const canvas = document.getElementById("graph");
+    const ctx = canvas.getContext("2d");
+    const width = canvas.width;
+    const height = canvas.height;
+    const originX = width / 2;
+    const originY = height / 2;
+    const xScale = 40;
+    const yScale = 40;
+
+    function formatPi(value) {
+      const pi = Math.PI;
+      const ratio = value / pi;
+      for (let d = 1; d <= 24; d++) {
+        let n = Math.round(ratio * d);
+        if (Math.abs(n / d - ratio) < 0.01) {
+          if (n === 0) return "0";
+          if (d === 1) return n === 1 ? "π" : `${n}π`;
+          return `${n}π/${d}`;
+        }
+      }
+      return value.toFixed(3);
+    }
+
+    function drawFunction() {
+      const expr = document.getElementById("expression").value;
+      let fn;
+      try {
+        fn = math.compile(expr);
+      } catch (e) {
+        alert("表达式有误，请重新输入！");
+        return;
+      }
+
+      // 清除画布
+      ctx.clearRect(0, 0, width, height);
+
+      // 坐标轴
+      ctx.beginPath();
+      ctx.moveTo(0, originY);
+      ctx.lineTo(width, originY);
+      ctx.moveTo(originX, 0);
+      ctx.lineTo(originX, height);
+      ctx.strokeStyle = "#000";
+      ctx.stroke();
+
+      // 绘图
+      ctx.beginPath();
+      let started = false;
+      const samples = [];
+      for (let px = 0; px < width; px++) {
+        const x = (px - originX) / xScale;
+        let y;
+        try {
+          y = fn.evaluate({ x });
+          samples.push({ x, y });
+        } catch {
+          samples.push({ x, y: null });
+          continue;
+        }
+        const py = originY - y * yScale;
+        if (!started) {
+          ctx.moveTo(px, py);
+          started = true;
+        } else {
+          ctx.lineTo(px, py);
+        }
+      }
+      ctx.strokeStyle = "blue";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      analyzeFunction(samples, fn);
+    }
+
+    function analyzeFunction(samples, fn) {
+      let info = "";
+
+      // 周期检测
+      const base = fn.evaluate({ x: 1 });
+      let T = null;
+      for (let t = 0.1; t <= 10; t += 0.01) {
+        try {
+          if (Math.abs(fn.evaluate({ x: 1 + t }) - base) < 0.01) {
+            T = t;
+            break;
+          }
+        } catch {}
+      }
+      if (T) info += `最小正周期 T ≈ ${formatPi(T)}<br/>`;
+
+      // 单调性分析
+      const increasing = [], decreasing = [];
+      let last = samples[0];
+      for (let i = 1; i < samples.length; i++) {
+        const curr = samples[i];
+        if (last.y != null && curr.y != null) {
+          if (curr.y > last.y) increasing.push(curr.x);
+          if (curr.y < last.y) decreasing.push(curr.x);
+        }
+        last = curr;
+      }
+      if (increasing.length)
+        info += "存在递增区间<br/>";
+      if (decreasing.length)
+        info += "存在递减区间<br/>";
+
+      // 对称性检测
+      const f0 = fn.evaluate({ x: 0 });
+      try {
+        if (Math.abs(fn.evaluate({ x: -1 }) - fn.evaluate({ x: 1 })) < 0.01)
+          info += "关于 y 轴对称<br/>";
+        if (Math.abs(fn.evaluate({ x: 2 }) + fn.evaluate({ x: -2 }) - 2 * f0) < 0.01)
+          info += "关于原点中心对称<br/>";
+      } catch {}
+
+      document.getElementById("info").innerHTML = info;
+    }
+
+    // 主题切换（原样保留）
+    let themes = ["", "light", "blue", "light-blue", "light-black"];
     let currentThemeIndex = 0;
     function toggleTheme() {
       document.body.classList.remove(...themes);
@@ -32,102 +167,13 @@
         localStorage.removeItem("theme");
       }
     }
-
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
       document.body.classList.add(savedTheme);
       currentThemeIndex = themes.indexOf(savedTheme);
     }
 
-    function formatPiFraction(value, tolerance = 0.01) {
-      const pi = Math.PI;
-      const ratio = value / pi;
-      for (let d = 1; d <= 24; d++) {
-        let n = Math.round(ratio * d);
-        if (Math.abs(n / d - ratio) < tolerance) {
-          if (n === 0) return "0";
-          if (d === 1) return n === 1 ? "π" : `${n}π`;
-          if (n === 1) return `π/${d}`;
-          return `${n}π/${d}`;
-        }
-      }
-      return value.toFixed(3);
-    }
-
-    function drawGraph() {
-      const expr = document.getElementById("functionInput").value;
-      const x = [], y = [];
-      const mathExpr = expr.replaceAll('^', '**');
-      const fn = new Function('x', `return ${mathExpr};`);
-
-      for (let i = -10; i <= 10; i += 0.01) {
-        try {
-          x.push(i);
-          y.push(fn(i));
-        } catch {
-          x.push(i);
-          y.push(null);
-        }
-      }
-
-      Plotly.newPlot('graph', [{ x, y, type: 'scatter', mode: 'lines', name: expr }],
-        { margin: { t: 20 } });
-
-      analyzeFunction(fn);
-    }
-
-    function analyzeFunction(fn) {
-      let info = "";
-
-      try {
-        // 周期性检测：f(x) ≈ f(x + T)
-        const sampleX = 1;
-        const f1 = fn(sampleX);
-        let T = null;
-        for (let t = 0.1; t <= 10; t += 0.01) {
-          const diff = Math.abs(fn(sampleX + t) - f1);
-          if (diff < 0.01) {
-            T = t;
-            break;
-          }
-        }
-        if (T) info += `最小正周期 T ≈ ${formatPiFraction(T)}<br/>`;
-
-        // 单调区间检测
-        let increasing = [], decreasing = [], last = fn(-10), start = -10;
-        for (let i = -10; i <= 10; i += 0.2) {
-          const curr = fn(i);
-          if (curr > last) {
-            if (decreasing.length && i - decreasing[decreasing.length - 1][1] > 0.5)
-              decreasing.push([start, i]);
-            start = i;
-            last = curr;
-          } else if (curr < last) {
-            if (increasing.length && i - increasing[increasing.length - 1][1] > 0.5)
-              increasing.push([start, i]);
-            start = i;
-            last = curr;
-          }
-        }
-
-        if (increasing.length)
-          info += "单调递增区间：" + increasing.map(p => `[${p[0].toFixed(1)}, ${p[1].toFixed(1)}]`).join(" ") + "<br/>";
-        if (decreasing.length)
-          info += "单调递减区间：" + decreasing.map(p => `[${p[0].toFixed(1)}, ${p[1].toFixed(1)}]`).join(" ") + "<br/>";
-
-        // 对称性检测
-        const f0 = fn(0);
-        const symmetric = Math.abs(fn(-1) - fn(1)) < 0.01;
-        if (symmetric) info += "关于 y 轴对称<br/>";
-
-        const center = fn(2) + fn(-2) - 2 * f0;
-        if (Math.abs(center) < 0.01) info += "关于原点中心对称<br/>";
-      } catch {
-        info += "函数分析失败。";
-      }
-
-      document.getElementById("info").innerHTML = info;
-    }
+    drawFunction();
   </script>
 </body>
 </html>
