@@ -19,36 +19,25 @@
   <div id="info"></div>
 
   <script>
-    const themes = [
-      ["white", "blue", "#ddd", "black"],
-      ["white", "black", "#ddd", "black"],
-      ["white", "red", "#ddd", "black"],
-      ["black", "lime", "#333", "white"],
-      ["black", "white", "#333", "white"],
-      ["black", "cyan", "#333", "white"]
-    ];
-
-    let themeIndex = 0;
-    function applyTheme(index) {
-      const [bg, text, btnBg, btnColor] = themes[index];
-      document.documentElement.style.setProperty('--bg-color', bg);
-      document.documentElement.style.setProperty('--text-color', text);
-      document.documentElement.style.setProperty('--btn-bg', btnBg);
-      document.documentElement.style.setProperty('--btn-color', btnColor);
-      localStorage.setItem("themeIndex", index);
+    let themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green","theme-black-blue","theme-black-white"];
+    let currentThemeIndex = 0;
+    function toggleTheme() {
+      document.body.classList.remove(...themes);
+      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+      const theme = themes[currentThemeIndex];
+      if (theme) {
+        document.body.classList.add(theme);
+        localStorage.setItem("theme", theme);
+      } else {
+        localStorage.removeItem("theme");
+      }
     }
 
-    function cycleTheme() {
-      themeIndex = (themeIndex + 1) % themes.length;
-      applyTheme(themeIndex);
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      document.body.classList.add(savedTheme);
+      currentThemeIndex = themes.indexOf(savedTheme);
     }
-
-    function loadSavedTheme() {
-      themeIndex = parseInt(localStorage.getItem("themeIndex")) || 0;
-      applyTheme(themeIndex);
-    }
-
-    window.addEventListener('DOMContentLoaded', loadSavedTheme);
 
     function formatPiFraction(value, tolerance = 0.01) {
       const pi = Math.PI;
