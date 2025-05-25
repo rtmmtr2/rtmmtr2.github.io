@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>函数绘图</title>
+  <meta charset="UTF-8" />
+  <title>函数绘图器</title>
   <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
-  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="../style.css" />
   <style>
     canvas {
       border: 1px solid #333;
@@ -18,18 +18,15 @@
       width: 300px;
     }
     #info {
-      white-space: pre-wrap;
       margin-top: 10px;
-      background: rgba(255,255,255,0.8);
-      padding: 8px;
-      border-radius: 5px;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <h1>函数绘图器</h1>
   <div id="controls">
-    函数表达式 y = <input type="text" id="expression" placeholder="例如 sin(x) 或 x^2" value="sin(2x)">
+    函数表达式 y = <input type="text" id="expression" value="sin(x)">
     <button onclick="drawFunction()">绘图</button>
     <button onclick="toggleTheme()">切换主题</button>
     <a href="../index.html"><button>返回主页</button></a>
@@ -53,11 +50,13 @@
       try {
         fn = math.compile(expr);
       } catch (e) {
-        alert("表达式有误，请重新输入！");
+        alert("表达式有误：" + e.message);
         return;
       }
 
       ctx.clearRect(0, 0, width, height);
+
+      // 坐标轴
       ctx.beginPath();
       ctx.moveTo(0, originY);
       ctx.lineTo(width, originY);
@@ -66,6 +65,7 @@
       ctx.strokeStyle = "#000";
       ctx.stroke();
 
+      // 绘图
       ctx.beginPath();
       let started = false;
       for (let px = 0; px < width; px++) {
@@ -92,102 +92,122 @@
     }
 
     function analyzeFunction(expr) {
-      let info = "";
+      const info = document.getElementById("info");
+      let result = "";
+
       try {
-        const intervals = getMonotonicIntervals(expr, -2 * Math.PI, 2 * Math.PI);
-        const result = formatIntervals(intervals);
-        info += `递增区间:\n${result.increasing.join('\n')}\n\n`;
-        info += `递减区间:\n${result.decreasing.join('\n')}`;
+        const node = math.parse(expr);
+        const x = math.parse("x");
+        const f = node.compile();
+        const df = math.derivative(node, "x").compile();
+
+        // 单调区间近似
+        result += "<b>单调性区间（近似）：</b><br>";
+        const intervals = [];
+        let increasing = null;
+        let a = -10;
+        let b = 10;
+        const step = 0.2;
+        let start = a;
+        for (let x1 = a; x1 < b; x1 += step) {
+          const d = df.evaluate({ x: x1 });
+          const nowInc = d > 0;
+          if (increasing === null) {
+            increasing = nowInc;
+            start = x1;
+          } else if (nowInc !== increasing) {
+            intervals.push({ inc: increasing, start, end: x1 });
+            start = x1;
+            increasing = nowInc;
+          }
+        }
+        intervals.push({ inc: increasing, start, end: b });
+        for (const intv of intervals) {
+          const s = formatInterval(intv.start);
+          const e = formatInterval(intv.end);
+          result += (intv.inc ? "递增" : "递减") + `：[${s}, ${e}]<br>`;
+        }
+
+        // 奇偶性检测
+        const fx = (x) => f.evaluate({ x });
+        const epsilon = 1e-4;
+        let even = true, odd = true;
+        for (let x = 0.1; x <= 5; x += 0.1) {
+          const f1 = fx(x);
+          const f2 = fx(-x);
+          if (Math.abs(f1 - f2) > epsilon) even = false;
+          if (Math.abs(f1 + f2) > epsilon) odd = false;
+        }
+        if (even) result += "<b>该函数为偶函数，对称轴为 x=0</b><br>";
+        if (odd) result += "<b>该函数为奇函数，对称中心为原点</b><br>";
+
+        // 周期性检测（尝试寻找最小 T）
+        let T = null;
+        const fx0 = fx;
+        for (let t = 0.1; t <= 10; t += 0.1) {
+          let periodic = true;
+          for (let x = -5; x <= 5; x += 0.2) {
+            if (Math.abs(fx0(x) - fx0(x + t)) > 0.05) {
+              periodic = false;
+              break;
+            }
+          }
+          if (periodic) {
+            T = t;
+            break;
+          }
+        }
+        if (T) result += "<b>最小正周期 T ≈</b> " + formatInterval(T) + "<br>";
+
       } catch (e) {
-        info = "无法分析函数信息。";
+        result += "函数分析失败：" + e.message;
       }
-      document.getElementById("info").innerText = info;
+
+      info.innerHTML = result;
     }
 
-    function getMonotonicIntervals(expr, rangeStart = -10, rangeEnd = 10, steps = 2000) {
-      const step = (rangeEnd - rangeStart) / steps;
-      const xValues = [];
-      const derivative = math.derivative(expr, 'x');
-      const fn = math.compile(expr);
-      const dfn = derivative.compile();
+    function formatInterval(v) {
+      // 转为 π 表示（例如 1.57 ≈ π/2）
+      const pi = Math.PI;
+      const k = Math.round(v / pi * 100) / 100;
+      if (Math.abs(k) < 0.01) return "0";
+      const frac = rationalApproximation(k);
+      if (frac.den === 1) return `${frac.num}π`;
+      return `${frac.num}π/${frac.den}`;
+    }
 
-      for (let i = 0; i <= steps; i++) {
-        const x = rangeStart + i * step;
-        let dx;
-        try {
-          dx = dfn.evaluate({ x });
-          if (!Number.isFinite(dx)) continue;
-          xValues.push({ x, dx });
-        } catch {
-          continue;
+    function rationalApproximation(x) {
+      const maxDen = 20;
+      let best = { num: 0, den: 1, err: Math.abs(x) };
+      for (let d = 1; d <= maxDen; d++) {
+        const n = Math.round(x * d);
+        const err = Math.abs(x - n / d);
+        if (err < best.err) {
+          best = { num: n, den: d, err };
         }
       }
-
-      const intervals = [];
-      let currentSign = Math.sign(xValues[0].dx);
-      let intervalStart = xValues[0].x;
-
-      for (let i = 1; i < xValues.length; i++) {
-        const sign = Math.sign(xValues[i].dx);
-        if (sign !== currentSign && sign !== 0) {
-          intervals.push({
-            sign: currentSign,
-            from: intervalStart,
-            to: xValues[i - 1].x
-          });
-          intervalStart = xValues[i].x;
-          currentSign = sign;
-        }
-      }
-
-      intervals.push({
-        sign: currentSign,
-        from: intervalStart,
-        to: xValues[xValues.length - 1].x
-      });
-
-      return intervals;
+      return best;
     }
 
-    function formatIntervals(intervals) {
-      const toPi = x => {
-        const frac = math.format(x / Math.PI, { fraction: 'ratio' });
-        if (frac === '0') return '0';
-        if (frac === '1') return 'π';
-        if (frac === '-1') return '-π';
-        return frac + 'π';
-      };
-
-      const output = { increasing: [], decreasing: [] };
-
-      intervals.forEach(i => {
-        const from = toPi(i.from);
-        const to = toPi(i.to);
-        const s = `[${from}, ${to}]`;
-        if (i.sign > 0) output.increasing.push(s);
-        else if (i.sign < 0) output.decreasing.push(s);
-      });
-
-      return output;
-    }
-
-    // 切换主题
-    let themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green","theme-black-blue","theme-black-white"];
+    // 主题切换
+    const themes = [
+      "theme-white-blue",
+      "theme-white-red",
+      "theme-white-black",
+      "theme-black-green",
+      "theme-black-blue",
+      "theme-black-white"
+    ];
     let currentThemeIndex = 0;
     function toggleTheme() {
       document.body.classList.remove(...themes);
       currentThemeIndex = (currentThemeIndex + 1) % themes.length;
       const theme = themes[currentThemeIndex];
-      if (theme) {
-        document.body.classList.add(theme);
-        localStorage.setItem("theme", theme);
-      } else {
-        localStorage.removeItem("theme");
-      }
+      document.body.classList.add(theme);
+      localStorage.setItem("theme", theme);
     }
-
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
+    if (savedTheme && themes.includes(savedTheme)) {
       document.body.classList.add(savedTheme);
       currentThemeIndex = themes.indexOf(savedTheme);
     }
