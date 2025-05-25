@@ -7,7 +7,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjs@11/lib/browser/math.js"></script>
 </head>
-<body>
+<body onload="applyTheme()">
   <h1>函数绘图</h1>
   <input type="text" id="expression" placeholder="请输入函数，如 sin(x), x^2 等" />
   <button onclick="drawFunction()">绘图</button>
@@ -22,25 +22,25 @@
   </div>
   <script src="../theme.js"></script>
   <script>
+    let myChart = null;
+
     function drawFunction() {
       const exprStr = document.getElementById("expression").value;
       if (!exprStr) return;
 
       try {
-        const node = math.parse(exprStr);
-        const compiled = node.compile();
-
+        const compiled = math.compile(exprStr);
         const labels = [];
         const data = [];
         for (let x = -10; x <= 10; x += 0.1) {
-          labels.push(x);
-          const y = compiled.evaluate({ x });
-          data.push(y);
+          labels.push(x.toFixed(2));
+          let y = compiled.evaluate({ x });
+          data.push(Number.isFinite(y) ? y : null);
         }
 
-        if (window.myChart) window.myChart.destroy();
         const ctx = document.getElementById("graph").getContext("2d");
-        window.myChart = new Chart(ctx, {
+        if (myChart) myChart.destroy();
+        myChart = new Chart(ctx, {
           type: "line",
           data: {
             labels: labels,
@@ -68,9 +68,7 @@
 
     function analyzeFunction(exprStr) {
       try {
-        const node = math.parse(exprStr);
-        const compiled = node.compile();
-
+        const compiled = math.compile(exprStr);
         const f = x => compiled.evaluate({ x });
         const sampleX = math.range(-10, 10, 0.1).toArray();
         const sampleY = sampleX.map(f);
