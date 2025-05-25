@@ -6,68 +6,132 @@
   <link rel="stylesheet" href="../style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjs@11/lib/browser/math.js"></script>
-</head>
-<body onload="applyTheme()">
-  <div class="top-bar">
-    <select id="theme-selector" onchange="setTheme(this.value)">
-      <option value="white-blue">白底蓝字</option>
-      <option value="white-black">白底黑字</option>
-      <option value="white-red">白底红字</option>
-      <option value="black-green">黑底绿字</option>
-      <option value="black-white">黑底白字</option>
-      <option value="black-blue">黑底蓝字</option>
-    </select>
-  </div>
+  <style>
+    :root {
+      --bg-color: white;
+      --text-color: blue;
+      --button-bg: #ddd;
+      --button-text: black;
+    }
 
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: monospace;
+      text-align: center;
+      padding: 20px;
+    }
+
+    input, select, button {
+      font-size: 16px;
+      margin: 5px;
+      padding: 5px 10px;
+      border-radius: 0;
+      border: 1px solid var(--text-color);
+      background-color: var(--button-bg);
+      color: var(--button-text);
+    }
+
+    canvas {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body onload="initTheme()">
   <h1>函数绘图</h1>
-  <input type="text" id="expression" placeholder="请输入函数，如 sin(x), x^2 等" />
+  <select id="theme-selector" onchange="changeTheme()">
+    <option value="white-blue">白底蓝字</option>
+    <option value="white-black">白底黑字</option>
+    <option value="white-red">白底红字</option>
+    <option value="black-green">黑底绿色</option>
+    <option value="black-white">黑底白色</option>
+    <option value="black-blue">黑底蓝色</option>
+  </select>
+
+  <input type="text" id="expression" placeholder="例如 sin(pi*x), x^2, 1/2pi 等" />
   <button onclick="drawFunction()">绘图</button>
   <a href="../index.html"><button>返回主页</button></a>
   <canvas id="graph" width="600" height="400"></canvas>
 
   <div id="analysis">
-    <h3>函数分析结果</h3>
+    <h3>函数分析</h3>
     <p id="period">最小正周期：--</p>
     <p id="monotonicity">单调性：--</p>
-    <p id="inc-intervals">单调递增区间：--</p>
-    <p id="dec-intervals">单调递减区间：--</p>
+    <p id="inc-intervals">递增区间：--</p>
+    <p id="dec-intervals">递减区间：--</p>
     <p id="symmetry">对称性：--</p>
   </div>
 
-  <script src="../theme.js"></script>
   <script>
-    let myChart = null;
+    let chart = null;
+
+    const themeMap = {
+      "white-blue": ["white", "blue", "#ddd", "black"],
+      "white-black": ["white", "black", "#ddd", "black"],
+      "white-red": ["white", "red", "#ddd", "black"],
+      "black-green": ["black", "lime", "#222", "white"],
+      "black-white": ["black", "white", "#333", "white"],
+      "black-blue": ["black", "cyan", "#333", "white"]
+    };
+
+    function initTheme() {
+      const theme = localStorage.getItem("theme") || "white-blue";
+      document.getElementById("theme-selector").value = theme;
+      applyTheme(theme);
+    }
+
+    function changeTheme() {
+      const theme = document.getElementById("theme-selector").value;
+      localStorage.setItem("theme", theme);
+      applyTheme(theme);
+    }
+
+    function applyTheme(theme) {
+      const [bg, text, btnBg, btnText] = themeMap[theme];
+      document.documentElement.style.setProperty('--bg-color', bg);
+      document.documentElement.style.setProperty('--text-color', text);
+      document.documentElement.style.setProperty('--button-bg', btnBg);
+      document.documentElement.style.setProperty('--button-text', btnText);
+    }
+
+    function preprocessExpression(expr) {
+      return expr
+        .replace(/π/g, "pi")
+        .replace(/([0-9])pi/g, (_, n) => `${n}*pi`)      // e.g. 2pi => 2*pi
+        .replace(/pi([a-zA-Z])/g, "pi*$1")                // e.g. pi*x => pi*x
+        .replace(/([a-zA-Z])pi/g, "$1*pi");               // e.g. xpi => x*pi
+    }
 
     function drawFunction() {
-      const exprStr = document.getElementById("expression").value;
-      if (!exprStr) return;
+      const input = document.getElementById("expression").value;
+      if (!input) return;
 
+      const expr = preprocessExpression(input);
       try {
-        const compiled = math.compile(exprStr);
-        const labels = [];
-        const data = [];
+        const compiled = math.compile(expr);
+        const xData = [], yData = [];
 
         for (let x = -10; x <= 10; x += 0.1) {
-          labels.push(x.toFixed(2));
-          let y = compiled.evaluate({ x });
-          data.push(Number.isFinite(y) ? y : null);
+          xData.push(x.toFixed(2));
+          const y = compiled.evaluate({ x });
+          yData.push(Number.isFinite(y) ? y : null);
         }
 
-        const ctx = document.getElementById("graph").getContext("2d");
-        if (myChart) myChart.destroy();
-        myChart = new Chart(ctx, {
+        if (chart) chart.destroy();
+        chart = new Chart(document.getElementById("graph"), {
           type: "line",
           data: {
-            labels: labels,
+            labels: xData,
             datasets: [{
-              label: exprStr,
-              data: data,
+              label: input,
+              data: yData,
               borderColor: "blue",
               fill: false,
               tension: 0.1
             }]
           },
           options: {
+            responsive: false,
             scales: {
               x: { title: { display: true, text: "x" }},
               y: { title: { display: true, text: "f(x)" }}
@@ -75,103 +139,85 @@
           }
         });
 
-        analyzeFunction(exprStr);
+        analyzeFunction(expr);
       } catch (err) {
-        alert("函数解析错误：" + err.message);
+        alert("表达式无效：" + err.message);
       }
     }
 
     function analyzeFunction(exprStr) {
       try {
-        const compiled = math.compile(exprStr);
-        const f = x => compiled.evaluate({ x });
+        const f = math.compile(exprStr);
+        const fx = x => f.evaluate({ x });
 
-        const xVals = [];
-        const yVals = [];
+        const xVals = [], yVals = [];
         for (let x = -10; x <= 10; x += 0.1) {
           xVals.push(x);
-          yVals.push(f(x));
+          yVals.push(fx(x));
         }
 
-        // 周期估算
+        // 周期判断
         let period = "--";
-        for (let t = 0.1; t < 20; t += 0.1) {
-          let match = true;
-          for (let x = -5; x < 5; x += 0.1) {
-            if (Math.abs(f(x) - f(x + t)) > 0.01) {
-              match = false;
+        for (let t = 0.1; t < 10; t += 0.1) {
+          let same = true;
+          for (let x = -3; x < 3; x += 0.1) {
+            if (Math.abs(fx(x) - fx(x + t)) > 0.05) {
+              same = false;
               break;
             }
           }
-          if (match) {
+          if (same) {
             period = t.toFixed(2);
             break;
           }
         }
 
-        // 单调性区间
-        let incIntervals = [], decIntervals = [];
-        let start = xVals[0];
-        let increasing = null;
+        // 单调区间
+        let inc = [], dec = [];
+        let start = xVals[0], state = null;
 
         for (let i = 1; i < xVals.length; i++) {
-          const x0 = xVals[i - 1], x1 = xVals[i];
-          const y0 = yVals[i - 1], y1 = yVals[i];
-
-          let current = y1 > y0 ? 'inc' : y1 < y0 ? 'dec' : null;
-          if (current !== increasing) {
-            if (increasing === 'inc') incIntervals.push([start, x0]);
-            else if (increasing === 'dec') decIntervals.push([start, x0]);
-            start = x0;
-            increasing = current;
+          const d = yVals[i] - yVals[i - 1];
+          const trend = d > 0 ? "inc" : d < 0 ? "dec" : state;
+          if (trend !== state && state !== null) {
+            const end = xVals[i - 1];
+            (state === "inc" ? inc : dec).push([start, end]);
+            start = xVals[i - 1];
           }
+          state = trend;
         }
-        if (increasing === 'inc') incIntervals.push([start, xVals[xVals.length - 1]]);
-        if (increasing === 'dec') decIntervals.push([start, xVals[xVals.length - 1]]);
 
-        const formatIntervals = arr => arr.map(([a, b]) => `[${a.toFixed(1)}, ${b.toFixed(1)}]`).join("，");
+        if (state === "inc") inc.push([start, xVals[xVals.length - 1]]);
+        if (state === "dec") dec.push([start, xVals[xVals.length - 1]]);
 
-        // 单调性总体
-        let mono = incIntervals.length > decIntervals.length ? "增函数" :
-                   decIntervals.length > incIntervals.length ? "减函数" : "不单调";
+        const format = list => list.map(([a, b]) => `[${a.toFixed(1)}, ${b.toFixed(1)}]`).join("，");
 
-        // 对称性
+        // 对称性检测
         let symmetry = "不确定";
         for (let c = -5; c <= 5; c += 0.5) {
           let even = true, odd = true;
-          for (let x = -5; x <= 5; x += 0.2) {
-            if (Math.abs(f(c + x) - f(c - x)) > 0.05) even = false;
-            if (Math.abs(f(c + x) + f(c - x)) > 0.05) odd = false;
+          for (let x = -2; x <= 2; x += 0.2) {
+            if (Math.abs(fx(c + x) - fx(c - x)) > 0.05) even = false;
+            if (Math.abs(fx(c + x) + fx(c - x)) > 0.05) odd = false;
           }
           if (even) {
-            symmetry = `轴对称（对称轴：x=${c}）`;
+            symmetry = `关于 x=${c} 对称`;
             break;
-          } else if (odd) {
-            symmetry = `中心对称（中心：(${c}, ${f(c).toFixed(2)})）`;
+          }
+          if (odd) {
+            symmetry = `关于 (${c}, ${fx(c).toFixed(2)}) 中心对称`;
             break;
           }
         }
 
         document.getElementById("period").innerText = "最小正周期：" + period;
-        document.getElementById("monotonicity").innerText = "单调性：" + mono;
-        document.getElementById("inc-intervals").innerText = "单调递增区间：" + formatIntervals(incIntervals);
-        document.getElementById("dec-intervals").innerText = "单调递减区间：" + formatIntervals(decIntervals);
+        document.getElementById("monotonicity").innerText = inc.length >= dec.length ? "单调递增" : "单调递减";
+        document.getElementById("inc-intervals").innerText = "递增区间：" + format(inc);
+        document.getElementById("dec-intervals").innerText = "递减区间：" + format(dec);
         document.getElementById("symmetry").innerText = "对称性：" + symmetry;
-      } catch (err) {
-        console.warn("函数分析失败：", err.message);
+      } catch (e) {
+        console.warn("分析失败：" + e.message);
       }
-    }
-
-    // 主题切换
-    function applyTheme() {
-      const theme = localStorage.getItem("theme") || "white-blue";
-      document.body.className = theme;
-      document.getElementById("theme-selector").value = theme;
-    }
-
-    function setTheme(theme) {
-      localStorage.setItem("theme", theme);
-      document.body.className = theme;
     }
   </script>
 </body>
