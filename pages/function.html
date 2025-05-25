@@ -1,112 +1,128 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>函数绘图</title>
-  <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
-  <link rel="stylesheet" href="../style.css">
-  <style>
-    canvas {
-      border: 1px solid #333;
-      background: #fff;
-      margin-top: 10px;
-    }
-    #controls {
-      margin-bottom: 10px;
-    }
-    input {
-      width: 300px;
-    }
-  </style>
+  <link rel="stylesheet" href="../style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@11/lib/browser/math.js"></script>
 </head>
 <body>
-  <h1>函数绘图器</h1>
-  <div id="controls">
-    函数表达式 y = <input type="text" id="expression" placeholder="例如 sin(x) 或 x^2" value="sin(x)">
-    <button onclick="drawFunction()">绘图</button>
-    <button onclick="toggleTheme()">切换主题</button>
-    <a href="../index.html"><button>返回主页</button></a>
+  <h1>函数绘图</h1>
+  <input type="text" id="expression" placeholder="请输入函数，如 sin(x), x^2 等" />
+  <button onclick="drawFunction()">绘图</button>
+  <button onclick="toggleTheme()">切换主题</button>
+  <a href="../index.html"><button>返回主页</button></a>
+  <canvas id="graph" width="600" height="400"></canvas>
+  <div id="analysis">
+    <h3>函数分析结果</h3>
+    <p id="period">最小正周期：--</p>
+    <p id="monotonicity">单调性：--</p>
+    <p id="symmetry">对称性：--</p>
   </div>
-  <canvas id="graph" width="800" height="400"></canvas>
-
+  <script src="../theme.js"></script>
   <script>
-    const canvas = document.getElementById("graph");
-    const ctx = canvas.getContext("2d");
-    const width = canvas.width;
-    const height = canvas.height;
-    const originX = width / 2;
-    const originY = height / 2;
-    const xScale = 40;
-    const yScale = 40;
-
     function drawFunction() {
-      const expr = document.getElementById("expression").value;
-      let fn;
+      const exprStr = document.getElementById("expression").value;
+      if (!exprStr) return;
+
       try {
-        fn = math.compile(expr);
-      } catch (e) {
-        alert("表达式有误，请重新输入！");
-        return;
-      }
+        const node = math.parse(exprStr);
+        const compiled = node.compile();
 
-      // 清除画布
-      ctx.clearRect(0, 0, width, height);
-
-      // 坐标轴
-      ctx.beginPath();
-      ctx.moveTo(0, originY);
-      ctx.lineTo(width, originY);
-      ctx.moveTo(originX, 0);
-      ctx.lineTo(originX, height);
-      ctx.strokeStyle = "#000";
-      ctx.stroke();
-
-      // 绘图
-      ctx.beginPath();
-      let started = false;
-      for (let px = 0; px < width; px++) {
-        const x = (px - originX) / xScale;
-        let y;
-        try {
-          y = fn.evaluate({ x });
-        } catch {
-          continue;
+        const labels = [];
+        const data = [];
+        for (let x = -10; x <= 10; x += 0.1) {
+          labels.push(x);
+          const y = compiled.evaluate({ x });
+          data.push(y);
         }
-        const py = originY - y * yScale;
-        if (!started) {
-          ctx.moveTo(px, py);
-          started = true;
-        } else {
-          ctx.lineTo(px, py);
+
+        if (window.myChart) window.myChart.destroy();
+        const ctx = document.getElementById("graph").getContext("2d");
+        window.myChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: labels,
+            datasets: [{
+              label: exprStr,
+              data: data,
+              borderColor: "blue",
+              fill: false,
+              tension: 0.1
+            }]
+          },
+          options: {
+            scales: {
+              x: { title: { display: true, text: "x" }},
+              y: { title: { display: true, text: "f(x)" }}
+            }
+          }
+        });
+
+        analyzeFunction(exprStr);
+      } catch (err) {
+        alert("函数解析错误：" + err.message);
+      }
+    }
+
+    function analyzeFunction(exprStr) {
+      try {
+        const node = math.parse(exprStr);
+        const compiled = node.compile();
+
+        const f = x => compiled.evaluate({ x });
+        const sampleX = math.range(-10, 10, 0.1).toArray();
+        const sampleY = sampleX.map(f);
+
+        // 周期性估算
+        let period = "--";
+        for (let t = 0.1; t < 20; t += 0.1) {
+          let match = true;
+          for (let x = -5; x < 5; x += 0.1) {
+            if (Math.abs(f(x) - f(x + t)) > 0.01) {
+              match = false;
+              break;
+            }
+          }
+          if (match) {
+            period = t.toFixed(2);
+            break;
+          }
         }
-      }
-      ctx.strokeStyle = "blue";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
 
-    // 主题切换
-    let themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green","theme-black-blue","theme-black-white"];
-    let currentThemeIndex = 0;
-    function toggleTheme() {
-      document.body.classList.remove(...themes);
-      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
-      const theme = themes[currentThemeIndex];
-      if (theme) {
-        document.body.classList.add(theme);
-        localStorage.setItem("theme", theme);
-      } else {
-        localStorage.removeItem("theme");
+        // 单调性估算
+        let inc = 0, dec = 0;
+        for (let i = 1; i < sampleY.length; i++) {
+          if (sampleY[i] > sampleY[i - 1]) inc++;
+          else if (sampleY[i] < sampleY[i - 1]) dec++;
+        }
+        let mono = inc > dec ? "增函数" : dec > inc ? "减函数" : "不单调";
+
+        // 对称性估算
+        let symmetry = "不确定";
+        for (let c = -5; c <= 5; c += 0.5) {
+          let even = true, odd = true;
+          for (let x = -5; x <= 5; x += 0.2) {
+            if (Math.abs(f(c + x) - f(c - x)) > 0.05) even = false;
+            if (Math.abs(f(c + x) + f(c - x)) > 0.05) odd = false;
+          }
+          if (even) {
+            symmetry = `轴对称（对称轴：x=${c}）`;
+            break;
+          } else if (odd) {
+            symmetry = `中心对称（中心：(${c}, ${f(c).toFixed(2)})）`;
+            break;
+          }
+        }
+
+        document.getElementById("period").innerText = "最小正周期：" + period;
+        document.getElementById("monotonicity").innerText = "单调性：" + mono;
+        document.getElementById("symmetry").innerText = "对称性：" + symmetry;
+      } catch (err) {
+        console.warn("函数分析失败：", err.message);
       }
     }
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      document.body.classList.add(savedTheme);
-      currentThemeIndex = themes.indexOf(savedTheme);
-    }
-
-    // 默认绘图
-    drawFunction();
   </script>
 </body>
 </html>
