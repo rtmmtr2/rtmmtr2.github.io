@@ -18,16 +18,18 @@
       width: 300px;
     }
     #info {
-      margin-top: 10px;
-      font-family: monospace;
       white-space: pre-wrap;
+      margin-top: 10px;
+      background: rgba(255,255,255,0.8);
+      padding: 8px;
+      border-radius: 5px;
     }
   </style>
 </head>
 <body>
   <h1>函数绘图器</h1>
   <div id="controls">
-    函数表达式 y = <input type="text" id="expression" placeholder="例如 sin(x) 或 log(x)" value="sin(x)">
+    函数表达式 y = <input type="text" id="expression" placeholder="例如 sin(x) 或 x^2" value="sin(2x)">
     <button onclick="drawFunction()">绘图</button>
     <button onclick="toggleTheme()">切换主题</button>
     <a href="../index.html"><button>返回主页</button></a>
@@ -46,8 +48,7 @@
     const yScale = 40;
 
     function drawFunction() {
-      const rawExpr = document.getElementById("expression").value;
-      const expr = rawExpr.replace(/π/g, "pi").replace(/\bln\b/g, "log");
+      const expr = document.getElementById("expression").value;
       let fn;
       try {
         fn = math.compile(expr);
@@ -56,11 +57,7 @@
         return;
       }
 
-      // 清除画布和信息
       ctx.clearRect(0, 0, width, height);
-      document.getElementById("info").textContent = "";
-
-      // 坐标轴
       ctx.beginPath();
       ctx.moveTo(0, originY);
       ctx.lineTo(width, originY);
@@ -69,26 +66,17 @@
       ctx.strokeStyle = "#000";
       ctx.stroke();
 
-      // 绘图 + 收集采样点
       ctx.beginPath();
       let started = false;
-      const samples = [];
       for (let px = 0; px < width; px++) {
         const x = (px - originX) / xScale;
         let y;
         try {
           y = fn.evaluate({ x });
-          if (!isFinite(y)) {
-            samples.push({ x, y: null });
-            continue;
-          }
         } catch {
-          samples.push({ x, y: null });
           continue;
         }
         const py = originY - y * yScale;
-        samples.push({ x, y });
-
         if (!started) {
           ctx.moveTo(px, py);
           started = true;
@@ -100,69 +88,91 @@
       ctx.lineWidth = 2;
       ctx.stroke();
 
-      analyzeFunction(expr, samples);
+      analyzeFunction(expr);
     }
 
-    // 分析函数性质
-    function analyzeFunction(expr, samples) {
-      let info = `函数表达式: y = ${expr.replace(/pi/g, "π")}\n`;
-
-      const values = samples.filter(p => p.y !== null);
-      const xs = values.map(p => p.x);
-      const ys = values.map(p => p.y);
-
-      // 判断是否为奇函数、偶函数（对称）
-      let isOdd = true, isEven = true;
-      for (let i = 0; i < xs.length; i++) {
-        const x = xs[i], y = ys[i];
-        const idx = xs.findIndex(v => Math.abs(v + x) < 1e-2);
-        if (idx === -1) continue;
-        const yNeg = ys[idx];
-        if (Math.abs(y + yNeg) > 0.1) isOdd = false;
-        if (Math.abs(y - yNeg) > 0.1) isEven = false;
+    function analyzeFunction(expr) {
+      let info = "";
+      try {
+        const intervals = getMonotonicIntervals(expr, -2 * Math.PI, 2 * Math.PI);
+        const result = formatIntervals(intervals);
+        info += `递增区间:\n${result.increasing.join('\n')}\n\n`;
+        info += `递减区间:\n${result.decreasing.join('\n')}`;
+      } catch (e) {
+        info = "无法分析函数信息。";
       }
-      if (isEven) info += "对称性: 偶函数，关于 y 轴对称\n";
-      else if (isOdd) info += "对称性: 奇函数，关于原点对称\n";
-      else info += "对称性: 无明显对称性\n";
+      document.getElementById("info").innerText = info;
+    }
 
-      // 简单判断周期
-      if (/sin|cos|tan/.test(expr)) {
-        if (/tan/.test(expr)) info += "最小正周期 T ≈ π\n";
-        else info += "最小正周期 T ≈ 2π\n";
-      }
+    function getMonotonicIntervals(expr, rangeStart = -10, rangeEnd = 10, steps = 2000) {
+      const step = (rangeEnd - rangeStart) / steps;
+      const xValues = [];
+      const derivative = math.derivative(expr, 'x');
+      const fn = math.compile(expr);
+      const dfn = derivative.compile();
 
-      // 单调区间（粗略计算）
-      let increasing = [], decreasing = [];
-      for (let i = 1; i < values.length; i++) {
-        const prev = values[i - 1], curr = values[i];
-        if (prev.y === null || curr.y === null) continue;
-        if (curr.y > prev.y) {
-          if (increasing.length === 0 || curr.x - increasing[increasing.length - 1][1] > 0.5)
-            increasing.push([prev.x, curr.x]);
-          else
-            increasing[increasing.length - 1][1] = curr.x;
-        } else if (curr.y < prev.y) {
-          if (decreasing.length === 0 || curr.x - decreasing[decreasing.length - 1][1] > 0.5)
-            decreasing.push([prev.x, curr.x]);
-          else
-            decreasing[decreasing.length - 1][1] = curr.x;
+      for (let i = 0; i <= steps; i++) {
+        const x = rangeStart + i * step;
+        let dx;
+        try {
+          dx = dfn.evaluate({ x });
+          if (!Number.isFinite(dx)) continue;
+          xValues.push({ x, dx });
+        } catch {
+          continue;
         }
       }
 
-      if (increasing.length) {
-        info += "单调递增区间（近似）:\n";
-        increasing.forEach(r => info += `  (${r[0].toFixed(2)}, ${r[1].toFixed(2)})\n`);
-      }
-      if (decreasing.length) {
-        info += "单调递减区间（近似）:\n";
-        decreasing.forEach(r => info += `  (${r[0].toFixed(2)}, ${r[1].toFixed(2)})\n`);
+      const intervals = [];
+      let currentSign = Math.sign(xValues[0].dx);
+      let intervalStart = xValues[0].x;
+
+      for (let i = 1; i < xValues.length; i++) {
+        const sign = Math.sign(xValues[i].dx);
+        if (sign !== currentSign && sign !== 0) {
+          intervals.push({
+            sign: currentSign,
+            from: intervalStart,
+            to: xValues[i - 1].x
+          });
+          intervalStart = xValues[i].x;
+          currentSign = sign;
+        }
       }
 
-      document.getElementById("info").textContent = info;
+      intervals.push({
+        sign: currentSign,
+        from: intervalStart,
+        to: xValues[xValues.length - 1].x
+      });
+
+      return intervals;
+    }
+
+    function formatIntervals(intervals) {
+      const toPi = x => {
+        const frac = math.format(x / Math.PI, { fraction: 'ratio' });
+        if (frac === '0') return '0';
+        if (frac === '1') return 'π';
+        if (frac === '-1') return '-π';
+        return frac + 'π';
+      };
+
+      const output = { increasing: [], decreasing: [] };
+
+      intervals.forEach(i => {
+        const from = toPi(i.from);
+        const to = toPi(i.to);
+        const s = `[${from}, ${to}]`;
+        if (i.sign > 0) output.increasing.push(s);
+        else if (i.sign < 0) output.decreasing.push(s);
+      });
+
+      return output;
     }
 
     // 切换主题
-    let themes = ["", "light", "blue", "light-blue", "light-black"];
+    let themes = ["", "light", "blue", "light-blue", "light-black", "black-green", "black-white", "black-blue"];
     let currentThemeIndex = 0;
     function toggleTheme() {
       document.body.classList.remove(...themes);
@@ -176,7 +186,6 @@
       }
     }
 
-    // 应用保存的主题
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
       document.body.classList.add(savedTheme);
