@@ -17,22 +17,17 @@
     input {
       width: 300px;
     }
-    #info {
-      margin-top: 15px;
-      line-height: 1.6;
-    }
   </style>
 </head>
 <body>
   <h1>函数绘图器</h1>
   <div id="controls">
-    函数表达式 y = <input type="text" id="expression" placeholder="例如 sin(x) 或 x^2" value="sin(x)">
+    函数表达式 y = <input type="text" id="expression" placeholder="例如 sin(x) 或 log(x)" value="sin(x)">
     <button onclick="drawFunction()">绘图</button>
     <button onclick="toggleTheme()">切换主题</button>
     <a href="../index.html"><button>返回主页</button></a>
   </div>
   <canvas id="graph" width="800" height="400"></canvas>
-  <div id="info"></div>
 
   <script>
     const canvas = document.getElementById("graph");
@@ -44,22 +39,12 @@
     const xScale = 40;
     const yScale = 40;
 
-    function formatPi(value) {
-      const pi = Math.PI;
-      const ratio = value / pi;
-      for (let d = 1; d <= 24; d++) {
-        let n = Math.round(ratio * d);
-        if (Math.abs(n / d - ratio) < 0.01) {
-          if (n === 0) return "0";
-          if (d === 1) return n === 1 ? "π" : `${n}π`;
-          return `${n}π/${d}`;
-        }
-      }
-      return value.toFixed(3);
-    }
-
     function drawFunction() {
-      const expr = document.getElementById("expression").value;
+      const rawExpr = document.getElementById("expression").value;
+
+      // 替换 π 为 pi，ln 为 log（math.js 用 log 代表 ln，自然对数）
+      const expr = rawExpr.replace(/π/g, "pi").replace(/\bln\b/g, "log");
+
       let fn;
       try {
         fn = math.compile(expr);
@@ -83,15 +68,13 @@
       // 绘图
       ctx.beginPath();
       let started = false;
-      const samples = [];
       for (let px = 0; px < width; px++) {
         const x = (px - originX) / xScale;
         let y;
         try {
           y = fn.evaluate({ x });
-          samples.push({ x, y });
+          if (!isFinite(y)) continue; // 排除无穷和NaN
         } catch {
-          samples.push({ x, y: null });
           continue;
         }
         const py = originY - y * yScale;
@@ -105,55 +88,9 @@
       ctx.strokeStyle = "blue";
       ctx.lineWidth = 2;
       ctx.stroke();
-
-      analyzeFunction(samples, fn);
     }
 
-    function analyzeFunction(samples, fn) {
-      let info = "";
-
-      // 周期检测
-      const base = fn.evaluate({ x: 1 });
-      let T = null;
-      for (let t = 0.1; t <= 10; t += 0.01) {
-        try {
-          if (Math.abs(fn.evaluate({ x: 1 + t }) - base) < 0.01) {
-            T = t;
-            break;
-          }
-        } catch {}
-      }
-      if (T) info += `最小正周期 T ≈ ${formatPi(T)}<br/>`;
-
-      // 单调性分析
-      const increasing = [], decreasing = [];
-      let last = samples[0];
-      for (let i = 1; i < samples.length; i++) {
-        const curr = samples[i];
-        if (last.y != null && curr.y != null) {
-          if (curr.y > last.y) increasing.push(curr.x);
-          if (curr.y < last.y) decreasing.push(curr.x);
-        }
-        last = curr;
-      }
-      if (increasing.length)
-        info += "存在递增区间<br/>";
-      if (decreasing.length)
-        info += "存在递减区间<br/>";
-
-      // 对称性检测
-      const f0 = fn.evaluate({ x: 0 });
-      try {
-        if (Math.abs(fn.evaluate({ x: -1 }) - fn.evaluate({ x: 1 })) < 0.01)
-          info += "关于 y 轴对称<br/>";
-        if (Math.abs(fn.evaluate({ x: 2 }) + fn.evaluate({ x: -2 }) - 2 * f0) < 0.01)
-          info += "关于原点中心对称<br/>";
-      } catch {}
-
-      document.getElementById("info").innerHTML = info;
-    }
-
-    // 主题切换（原样保留）
+    // 切换主题
     let themes = ["", "light", "blue", "light-blue", "light-black"];
     let currentThemeIndex = 0;
     function toggleTheme() {
@@ -167,12 +104,15 @@
         localStorage.removeItem("theme");
       }
     }
+
+    // 应用保存的主题
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) {
       document.body.classList.add(savedTheme);
       currentThemeIndex = themes.indexOf(savedTheme);
     }
 
+    // 默认绘图
     drawFunction();
   </script>
 </body>
