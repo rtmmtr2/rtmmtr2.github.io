@@ -1,0 +1,141 @@
+<!DOCTYPE html><html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>单位转换器</title>
+  <link rel="stylesheet" href="../style.css">
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    select, input, button { margin: 5px; padding: 5px; }
+    .group { margin-bottom: 15px; }
+  </style>
+</head>
+<body>
+  <h1>单位转换器</h1>
+  <div class="group">
+    <label for="category">选择类别：</label>
+    <select id="category" onchange="populateUnits()">
+      <option value="length">长度</option>
+      <option value="area">面积</option>
+      <option value="volume">体积</option>
+      <option value="mass">质量</option>
+      <option value="speed">速度</option>
+    </select>
+  </div>
+  <div class="group">
+    <input type="number" id="inputValue" placeholder="输入数值">
+    <select id="fromUnit"></select>
+    <span>→</span>
+    <select id="toUnit"></select>
+    <button onclick="convert()">转换</button>
+  </div>
+  <div id="result"></div>
+  <a href="../index.html"><button>返回主页</button></a>
+  <button onclick="toggleTheme()">切换主题</button>  <script>
+    const units = {
+      length: {
+        m: 1,
+        cm: 0.01,
+        mm: 0.001,
+        km: 1000,
+        in: 0.0254,
+        ft: 0.3048,
+        yd: 0.9144,
+        mi: 1609.34
+      },
+      area: {
+        "m²": 1,
+        "cm²": 0.0001,
+        "mm²": 0.000001,
+        "km²": 1e6,
+        "in²": 0.00064516,
+        "ft²": 0.092903,
+        "yd²": 0.836127,
+        "acre": 4046.86,
+        "ha": 10000
+      },
+      volume: {
+        "m³": 1,
+        "cm³": 0.000001,
+        "mm³": 1e-9,
+        L: 0.001,
+        mL: 1e-6,
+        "in³": 0.0000163871,
+        "ft³": 0.0283168,
+        "gal": 0.00378541
+      },
+      mass: {
+        kg: 1,
+        g: 0.001,
+        mg: 1e-6,
+        t: 1000,
+        lb: 0.453592,
+        oz: 0.0283495
+      },
+      speed: {
+        "m/s": 1,
+        "km/h": 0.277778,
+        "mi/h": 0.44704,
+        "ft/s": 0.3048,
+        "knot": 0.514444
+      }
+    };
+
+    function populateUnits() {
+      const category = document.getElementById("category").value;
+      const fromSelect = document.getElementById("fromUnit");
+      const toSelect = document.getElementById("toUnit");
+      fromSelect.innerHTML = toSelect.innerHTML = "";
+
+      for (let unit in units[category]) {
+        const option1 = document.createElement("option");
+        option1.value = option1.textContent = unit;
+        fromSelect.appendChild(option1);
+
+        const option2 = document.createElement("option");
+        option2.value = option2.textContent = unit;
+        toSelect.appendChild(option2);
+      }
+    }
+
+    function convert() {
+      const category = document.getElementById("category").value;
+      const value = parseFloat(document.getElementById("inputValue").value);
+      const from = document.getElementById("fromUnit").value;
+      const to = document.getElementById("toUnit").value;
+
+      if (isNaN(value)) {
+        document.getElementById("result").innerText = "请输入有效数值";
+        return;
+      }
+
+      const base = value * units[category][from];
+      const converted = base / units[category][to];
+      document.getElementById("result").innerText = `${value} ${from} = ${converted} ${to}`;
+    }
+
+    populateUnits(); // 默认初始化
+
+    // 主题切换
+    const themes = [
+      "theme-white-blue",
+      "theme-white-red",
+      "theme-white-black",
+      "theme-black-green",
+      "theme-black-blue",
+      "theme-black-white"
+    ];
+    let currentThemeIndex = 0;
+    function toggleTheme() {
+      document.body.classList.remove(...themes);
+      currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+      const theme = themes[currentThemeIndex];
+      document.body.classList.add(theme);
+      localStorage.setItem("theme", theme);
+    }
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme && themes.includes(savedTheme)) {
+      document.body.classList.add(savedTheme);
+      currentThemeIndex = themes.indexOf(savedTheme);
+    }
+  </script></body>
+</html>
