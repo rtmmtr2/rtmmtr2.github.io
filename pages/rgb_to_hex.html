@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>RGB 转 HEX</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      text-align: center;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    input[type="number"] {
+      width: 60px;
+      margin: 0 5px;
+      font-size: 16px;
+    }
+
+    #color-preview {
+      width: 100px;
+      height: 100px;
+      margin: 1rem auto;
+      border: 1px solid #333;
+      background-color: #fff;
+    }
+
+    #result {
+      font-weight: bold;
+      font-size: 1.2em;
+      margin-top: 10px;
+    }
+
+    table {
+      margin: 2rem auto;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 8px 12px;
+      border: 1px solid #999;
+    }
+
+    .btn {
+      margin: 10px;
+      padding: 10px 20px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 0;
+      border: 2px solid currentColor;
+      background: transparent;
+      color: inherit;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .btn:hover {
+      background-color: currentColor;
+      color: var(--btn-hover-text, #fff);
+    }
+  </style>
+</head>
+<body>
+  <h1>RGB 转 HEX 颜色工具</h1>
+  <div>
+    <label>R: <input type="number" id="r" min="0" max="255" value="255" /></label>
+    <label>G: <input type="number" id="g" min="0" max="255" value="0" /></label>
+    <label>B: <input type="number" id="b" min="0" max="255" value="0" /></label>
+    <button class="btn" onclick="convert()">转换</button>
+  </div>
+
+  <div id="color-preview"></div>
+  <div id="result">HEX: #FF0000</div>
+  <button class="btn" onclick="copyHex()">复制 HEX</button>
+  <br>
+  <a href="../index.html"><button class="btn">返回主页</button></a>
+  <button class="btn" onclick="toggleTheme()">切换主题</button>
+
+  <h2>常见颜色 RGB / HEX 对照表</h2>
+  <table>
+    <thead>
+      <tr><th>颜色</th><th>RGB</th><th>HEX</th></tr>
+    </thead>
+    <tbody>
+      <tr><td style="background:#FF0000;">红色</td><td>255, 0, 0</td><td>#FF0000</td></tr>
+      <tr><td style="background:#00FF00;">绿色</td><td>0, 255, 0</td><td>#00FF00</td></tr>
+      <tr><td style="background:#0000FF;">蓝色</td><td>0, 0, 255</td><td>#0000FF</td></tr>
+      <tr><td style="background:#FFFF00;">黄色</td><td>255, 255, 0</td><td>#FFFF00</td></tr>
+      <tr><td style="background:#00FFFF;">青色</td><td>0, 255, 255</td><td>#00FFFF</td></tr>
+      <tr><td style="background:#FF00FF;">品红</td><td>255, 0, 255</td><td>#FF00FF</td></tr>
+      <tr><td style="background:#000000; color:#fff;">黑色</td><td>0, 0, 0</td><td>#000000</td></tr>
+      <tr><td style="background:#FFFFFF;">白色</td><td>255, 255, 255</td><td>#FFFFFF</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    function convert() {
+      const r = clamp(document.getElementById('r').value);
+      const g = clamp(document.getElementById('g').value);
+      const b = clamp(document.getElementById('b').value);
+
+      const hex = '#' + [r, g, b].map(x => Number(x).toString(16).padStart(2, '0')).join('').toUpperCase();
+      document.getElementById('result').textContent = 'HEX: ' + hex;
+      document.getElementById('color-preview').style.backgroundColor = hex;
+    }
+
+    function clamp(value) {
+      const num = parseInt(value);
+      return Math.max(0, Math.min(255, isNaN(num) ? 0 : num));
+    }
+
+    function copyHex() {
+      const hex = document.getElementById('result').textContent.replace("HEX: ", "").trim();
+      navigator.clipboard.writeText(hex).then(() => alert("已复制: " + hex));
+    }
+
+    // 主题切换
+    const themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green", "theme-black-blue", "theme-black-white"];
+    let currentThemeIndex = 0;
+
+    function toggleTheme() {
+      document.body.classList.remove(...themes);
+      currentThemeIndex = (currentThemeIndex + 1) % (themes.length + 1);
+      if (currentThemeIndex === themes.length) {
+        localStorage.removeItem("theme");
+      } else {
+        document.body.classList.add(themes[currentThemeIndex]);
+        localStorage.setItem("theme", themes[currentThemeIndex]);
+      }
+    }
+
+    // 初始主题加载
+    window.onload = () => {
+      const saved = localStorage.getItem("theme");
+      if (saved && themes.includes(saved)) {
+        document.body.classList.add(saved);
+        currentThemeIndex = themes.indexOf(saved);
+      }
+      convert();
+    };
+  </script>
+</body>
+</html>
