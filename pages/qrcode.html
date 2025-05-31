@@ -39,7 +39,8 @@
 
     #qrImage {
       margin-top: 1rem;
-      max-width: 200px;
+      width: 200px;
+      height: 200px;
     }
   </style>
 </head>
@@ -53,7 +54,6 @@
   <button class="btn" onclick="copyQR()">复制内容</button>
   <br />
 
-  <canvas id="qrCanvas" style="display:none;"></canvas>
   <img id="qrImage" alt="二维码预览" />
 
   <br />
@@ -61,32 +61,34 @@
   <button class="btn" onclick="toggleTheme()">切换主题</button>
 
   <script>
+    const qrImage = document.getElementById("qrImage");
+
     function generateQR() {
       const text = document.getElementById("qrText").value.trim();
-      const canvas = document.getElementById("qrCanvas");
-      const img = document.getElementById("qrImage");
-
       if (!text) {
         alert("请输入内容！");
         return;
       }
 
-      QRCode.toCanvas(canvas, text, { errorCorrectionLevel: 'H', width: 200 }, function (error) {
-        if (error) {
-          console.error(error);
+      QRCode.toDataURL(text, { errorCorrectionLevel: "H", width: 200 }, (err, url) => {
+        if (err) {
+          console.error("二维码生成失败：", err);
+          alert("生成二维码失败！");
           return;
         }
 
-        // 生成 Base64 图片
-        img.src = canvas.toDataURL("image/png");
+        qrImage.src = url;
       });
     }
 
     function downloadQR() {
-      const canvas = document.getElementById("qrCanvas");
+      if (!qrImage.src) {
+        alert("请先生成二维码！");
+        return;
+      }
       const link = document.createElement("a");
+      link.href = qrImage.src;
       link.download = "qrcode.png";
-      link.href = canvas.toDataURL("image/png");
       link.click();
     }
 
@@ -123,7 +125,7 @@
         document.body.classList.add(savedTheme);
         currentThemeIndex = themes.indexOf(savedTheme);
       }
-      generateQR(); // 初始生成
+      generateQR(); // 默认生成
     };
   </script>
 </body>
