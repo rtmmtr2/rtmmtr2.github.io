@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>折线图绘制</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    body {
+      text-align: center;
+      padding: 2rem;
+    }
+    textarea {
+      width: 90%;
+      height: 100px;
+      margin: 10px 0;
+    }
+    #chart-container {
+      max-width: 800px;
+      margin: auto;
+    }
+    button {
+      margin: 0.5rem;
+    }
+    input[type="color"], input[type="text"] {
+      margin: 5px;
+    }
+    .line-input {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>折线图绘制</h1>
+
+  <div id="lines-input">
+    <div class="line-input">
+      <label>线 1 坐标：</label>
+      <input type="text" class="line-data" value="(0,1),(1,2),(2,3)" />
+      <label>颜色：</label>
+      <input type="color" class="line-color" value="#ff0000" />
+      <label>标签：</label>
+      <input type="text" class="line-label" value="线 1" />
+    </div>
+  </div>
+  <button onclick="addLine()">添加一条线</button>
+  <button onclick="drawChart()">绘制图表</button>
+  <button onclick="downloadChart()">导出为图片</button>
+  <button onclick="toggleTheme()">切换主题</button>
+  <a href="../index.html"><button>返回主页</button></a>
+
+  <div id="chart-container">
+    <canvas id="lineChart"></canvas>
+  </div>
+
+  <script>
+    const themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green", "theme-black-blue", "theme-black-white"];
+    let currentThemeIndex = 0;
+
+    function toggleTheme() {
+      document.body.classList.remove(...themes);
+      currentThemeIndex = (currentThemeIndex + 1) % (themes.length + 1);
+      if (currentThemeIndex === themes.length) {
+        localStorage.removeItem("theme");
+      } else {
+        const theme = themes[currentThemeIndex];
+        document.body.classList.add(theme);
+        localStorage.setItem("theme", theme);
+      }
+    }
+
+    window.onload = () => {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme && themes.includes(savedTheme)) {
+        document.body.classList.add(savedTheme);
+        currentThemeIndex = themes.indexOf(savedTheme);
+      }
+    };
+
+    function addLine() {
+      const lineDiv = document.createElement("div");
+      lineDiv.className = "line-input";
+      lineDiv.innerHTML = `
+        <label>线坐标：</label>
+        <input type="text" class="line-data" value="(0,0),(1,1)" />
+        <label>颜色：</label>
+        <input type="color" class="line-color" value="#0000ff" />
+        <label>标签：</label>
+        <input type="text" class="line-label" value="线" />
+      `;
+      document.getElementById("lines-input").appendChild(lineDiv);
+    }
+
+    let chart;
+
+    function drawChart() {
+      const datasets = [];
+      const dataInputs = document.querySelectorAll(".line-data");
+      const colorInputs = document.querySelectorAll(".line-color");
+      const labelInputs = document.querySelectorAll(".line-label");
+
+      for (let i = 0; i < dataInputs.length; i++) {
+        const points = dataInputs[i].value.match(/\(([^()]+)\)/g);
+        if (!points) continue;
+
+        const data = points.map(p => {
+          const [x, y] = p.replace(/[()]/g, '').split(',').map(Number);
+          return { x, y };
+        });
+
+        datasets.push({
+          label: labelInputs[i].value || `线 ${i + 1}`,
+          data,
+          borderColor: colorInputs[i].value,
+          backgroundColor: colorInputs[i].value,
+          fill: false,
+          tension: 0.2
+        });
+      }
+
+      const ctx = document.getElementById("lineChart").getContext("2d");
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              display: true,
+              onClick: (e, legendItem, legend) => {
+                const index = legendItem.datasetIndex;
+                const meta = legend.chart.getDatasetMeta(index);
+                meta.hidden = meta.hidden === null ? !legend.chart.data.datasets[index].hidden : null;
+                legend.chart.update();
+              }
+            }
+          },
+          scales: {
+            x: {
+              type: 'linear',
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    function downloadChart() {
+      const url = document.getElementById("lineChart").toDataURL("image/png");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "line_chart.png";
+      a.click();
+    }
+  </script>
+</body>
+</html>

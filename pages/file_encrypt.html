@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>文件加密解密</title>
+  <link rel="stylesheet" href="../style.css" />
+  <style>
+    body {
+      text-align: center;
+      padding: 2rem;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    h1 {
+      margin-bottom: 1rem;
+    }
+
+    input[type="password"], input[type="file"] {
+      margin: 1rem;
+      padding: 0.5rem;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      margin: 0.5rem;
+      font-size: 16px;
+      border: 2px solid currentColor;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    button:hover {
+      background-color: currentColor;
+      color: var(--btn-hover-text, #fff);
+    }
+
+    #drop-area {
+      border: 2px dashed #999;
+      padding: 1rem;
+      margin: 1rem auto;
+      width: 80%;
+      max-width: 600px;
+    }
+
+    .file-entry {
+      margin: 0.5rem 0;
+    }
+
+    #theme-button {
+      margin-top: 2rem;
+      padding: 10px 20px;
+    }
+
+    a.download-link {
+      display: block;
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>文件加密 / 解密工具</h1>
+
+  <div>
+    <input type="password" id="password" placeholder="请输入密码" />
+    <br />
+    <input type="file" id="fileInput" multiple />
+    <br />
+    <button onclick="encryptFiles()">加密文件</button>
+    <button onclick="decryptFiles()">解密文件</button>
+    <a href="../index.html"><button>返回主页</button></a>
+    <button id="theme-button" onclick="toggleTheme()">切换主题</button>
+  </div>
+
+  <div id="drop-area" ondragover="event.preventDefault()" ondrop="handleDrop(event)">
+    拖拽文件到此处上传
+  </div>
+
+  <div id="fileList"></div>
+
+  <script>
+    const themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green", "theme-black-blue", "theme-black-white"];
+    let currentThemeIndex = 0;
+
+    function toggleTheme() {
+      themes.forEach(t => document.body.classList.remove(t));
+      currentThemeIndex = (currentThemeIndex + 1) % (themes.length + 1);
+      if (currentThemeIndex === themes.length) {
+        localStorage.removeItem("theme");
+      } else {
+        document.body.classList.add(themes[currentThemeIndex]);
+        localStorage.setItem("theme", themes[currentThemeIndex]);
+      }
+    }
+
+    window.onload = () => {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme && themes.includes(savedTheme)) {
+        document.body.classList.add(savedTheme);
+        currentThemeIndex = themes.indexOf(savedTheme);
+      }
+    };
+
+    let selectedFiles = [];
+
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      selectedFiles = [...e.target.files];
+      renderFileList();
+    });
+
+    function handleDrop(event) {
+      event.preventDefault();
+      selectedFiles = [...event.dataTransfer.files];
+      renderFileList();
+    }
+
+    function renderFileList() {
+      const list = document.getElementById('fileList');
+      list.innerHTML = '';
+      selectedFiles.forEach(file => {
+        const div = document.createElement('div');
+        div.className = 'file-entry';
+        div.textContent = file.name;
+        list.appendChild(div);
+      });
+    }
+
+    async function getKey(password, salt) {
+      const enc = new TextEncoder();
+      const keyMaterial = await window.crypto.subtle.importKey(
+        'raw', enc.encode(password), {name: 'PBKDF2'}, false, ['deriveKey']
+      );
+      return window.crypto.subtle.deriveKey({
+        name: 'PBKDF2',
+        salt: salt,
+        iterations: 100000,
+        hash: 'SHA-256'
+      }, keyMaterial, {name: 'AES-GCM', length: 256}, false, ['encrypt', 'decrypt']);
+    }
+
+    async function encryptFiles() {
+      const password = document.getElementById('password').value;
+      if (!password || selectedFiles.length === 0) {
+        alert("请设置密码并选择文件");
+        return;
+      }
+
+      for (const file of selectedFiles) {
+        const content = await file.arrayBuffer();
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const key = await getKey(password, salt);
+        const encrypted = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, key, content);
+
+        const blob = new Blob([salt, iv, new Uint8Array(encrypted)], {type: "application/octet-stream"});
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = file.name + ".enc";
+        a.textContent = `下载加密文件: ${a.download}`;
+        a.className = "download-link";
+        document.body.appendChild(a);
+      }
+    }
+
+    async function decryptFiles() {
+      const password = document.getElementById('password').value;
+      if (!password || selectedFiles.length === 0) {
+        alert("请设置密码并选择加密文件");
+        return;
+      }
+
+      for (const file of selectedFiles) {
+        const buffer = await file.arrayBuffer();
+        const salt = buffer.slice(0, 16);
+        const iv = buffer.slice(16, 28);
+        const data = buffer.slice(28);
+
+        try {
+          const key = await getKey(password, new Uint8Array(salt));
+          const decrypted = await crypto.subtle.decrypt({name: 'AES-GCM', iv: new Uint8Array(iv)}, key, data);
+          const blob = new Blob([decrypted]);
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(blob);
+          a.download = file.name.replace(/\.enc$/, "");
+          a.textContent = `下载解密文件: ${a.download}`;
+          a.className = "download-link";
+          document.body.appendChild(a);
+        } catch (e) {
+          alert(`解密失败: ${file.name}，可能是密码错误或文件损坏`);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
