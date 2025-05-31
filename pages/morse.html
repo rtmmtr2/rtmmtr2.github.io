@@ -1,111 +1,54 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <title>摩斯密码工具</title>
-  <link rel="stylesheet" href="../style.css">
+  <meta charset="UTF-8" />
+  <title>摩斯密码转换器</title>
+  <link rel="icon" href="../chest.png" type="image/png">
+  <link rel="stylesheet" href="../style.css" />
   <style>
     body {
       text-align: center;
       padding: 2rem;
-      transition: background-color 0.3s, color 0.3s;
     }
     textarea {
-      width: 80%;
-      max-width: 600px;
+      width: 90%;
       height: 100px;
-      margin: 1rem auto;
-      display: block;
-      font-size: 16px;
-      padding: 10px;
+      margin: 10px 0;
     }
     button {
-      padding: 0.5rem 1rem;
-      font-size: 16px;
-      border: 2px solid currentColor;
-      background: transparent;
-      color: inherit;
-      cursor: pointer;
       margin: 0.5rem;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    button:hover {
-      background-color: currentColor;
-      color: var(--btn-hover-text, #fff);
-    }
-    #output {
-      white-space: pre-wrap;
-      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
-  <h1>摩斯密码工具</h1>
+  <h1>摩斯密码转换器</h1>
 
-  <textarea id="input" placeholder="请输入要加密或解密的内容"></textarea>
-  <div>
-    <button onclick="encryptMorse()">加密为摩斯</button>
-    <button onclick="decryptMorse()">解密为文本</button>
-    <a href="../index.html"><button>返回主页</button></a>
-    <button onclick="toggleTheme()">切换主题</button>
-  </div>
+  <textarea id="inputText" placeholder="请输入要加密或解密的内容"></textarea><br>
+  <button onclick="encrypt()">加密</button>
+  <button onclick="decrypt()">解密</button>
+  <button onclick="toggleTheme()">切换主题</button>
+  <a href="../index.html"><button>返回主页</button></a>
 
-  <div id="output"></div>
+  <h2>结果</h2>
+  <textarea id="outputText" readonly></textarea><br>
+  <button onclick="copyResult()">复制结果</button>
 
   <script>
-    const morseMap = {
-      A: ".-",     B: "-...",   C: "-.-.",
-      D: "-..",    E: ".",      F: "..-.",
-      G: "--.",    H: "....",   I: "..",
-      J: ".---",   K: "-.-",    L: ".-..",
-      M: "--",     N: "-.",     O: "---",
-      P: ".--.",   Q: "--.-",   R: ".-.",
-      S: "...",    T: "-",      U: "..-",
-      V: "...-",   W: ".--",    X: "-..-",
-      Y: "-.--",   Z: "--..",
-      0: "-----", 1: ".----", 2: "..---",
-      3: "...--", 4: "....-", 5: ".....",
-      6: "-....", 7: "--...", 8: "---..",
-      9: "----.",
-      " ": "/"
-    };
-
-    const reverseMorseMap = {};
-    for (let key in morseMap) {
-      reverseMorseMap[morseMap[key]] = key;
-    }
-
-    function encryptMorse() {
-      const input = document.getElementById("input").value.toUpperCase();
-      let output = "";
-      for (let char of input) {
-        output += morseMap[char] ? morseMap[char] + " " : "? ";
-      }
-      document.getElementById("output").textContent = "摩斯加密结果：\n" + output.trim();
-    }
-
-    function decryptMorse() {
-      const input = document.getElementById("input").value.trim();
-      const words = input.split(" ");
-      let output = "";
-      for (let code of words) {
-        output += reverseMorseMap[code] || "?";
-      }
-      document.getElementById("output").textContent = "解密文本结果：\n" + output;
-    }
-
-    // 主题切换
-    const themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green", "theme-black-blue", "theme-black-white"];
+    const themes = [
+      "theme-white-blue", "theme-white-red", "theme-white-black",
+      "theme-black-green", "theme-black-blue", "theme-black-white"
+    ];
     let currentThemeIndex = 0;
 
     function toggleTheme() {
-      themes.forEach(t => document.body.classList.remove(t));
+      document.body.classList.remove(...themes);
       currentThemeIndex = (currentThemeIndex + 1) % (themes.length + 1);
       if (currentThemeIndex === themes.length) {
         localStorage.removeItem("theme");
       } else {
-        document.body.classList.add(themes[currentThemeIndex]);
-        localStorage.setItem("theme", themes[currentThemeIndex]);
+        const theme = themes[currentThemeIndex];
+        document.body.classList.add(theme);
+        localStorage.setItem("theme", theme);
       }
     }
 
@@ -116,6 +59,49 @@
         currentThemeIndex = themes.indexOf(savedTheme);
       }
     };
+
+    const morseCode = {
+      'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..',
+      'E': '.', 'F': '..-.', 'G': '--.', 'H': '....',
+      'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+      'M': '--', 'N': '-.', 'O': '---', 'P': '.--.',
+      'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-',
+      'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+      'Y': '-.--', 'Z': '--..',
+      '0': '-----', '1': '.----', '2': '..---',
+      '3': '...--', '4': '....-', '5': '.....',
+      '6': '-....', '7': '--...', '8': '---..',
+      '9': '----.',
+      '.': '.-.-.-', ',': '--..--', '?': '..--..',
+      '!': '-.-.--', '/': '-..-.', '(': '-.--.',
+      ')': '-.--.-', '&': '.-...', ':': '---...',
+      ';': '-.-.-.', '=': '-...-', '+': '.-.-.',
+      '-': '-....-', '_': '..--.-', '"': '.-..-.',
+      '$': '...-..-', '@': '.--.-.', ' ': '/'
+    };
+
+    const inverseMorseCode = Object.fromEntries(
+      Object.entries(morseCode).map(([k, v]) => [v, k])
+    );
+
+    function encrypt() {
+      const text = document.getElementById("inputText").value.toUpperCase();
+      const morse = [...text].map(char => morseCode[char] || '').join(' ');
+      document.getElementById("outputText").value = morse;
+    }
+
+    function decrypt() {
+      const code = document.getElementById("inputText").value.trim().split(/\s+/);
+      const text = code.map(c => inverseMorseCode[c] || '').join('');
+      document.getElementById("outputText").value = text;
+    }
+
+    function copyResult() {
+      const output = document.getElementById("outputText");
+      output.select();
+      document.execCommand("copy");
+      alert("已复制结果！");
+    }
   </script>
 </body>
 </html>
