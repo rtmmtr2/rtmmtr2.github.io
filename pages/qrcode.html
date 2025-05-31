@@ -20,10 +20,6 @@
       margin: 10px 0;
     }
 
-    canvas {
-      margin: 1rem auto;
-    }
-
     .btn {
       margin: 10px;
       padding: 10px 20px;
@@ -40,6 +36,11 @@
       background-color: currentColor;
       color: var(--btn-hover-text, #fff);
     }
+
+    #qrImage {
+      margin-top: 1rem;
+      max-width: 200px;
+    }
   </style>
 </head>
 <body>
@@ -49,10 +50,13 @@
   <br />
   <button class="btn" onclick="generateQR()">生成二维码</button>
   <button class="btn" onclick="downloadQR()">保存二维码</button>
-  <button class="btn" onclick="copyQR()">复制二维码链接</button>
+  <button class="btn" onclick="copyQR()">复制内容</button>
   <br />
-  <canvas id="qrCanvas"></canvas>
 
+  <canvas id="qrCanvas" style="display:none;"></canvas>
+  <img id="qrImage" alt="二维码预览" />
+
+  <br />
   <a href="../index.html"><button class="btn">返回主页</button></a>
   <button class="btn" onclick="toggleTheme()">切换主题</button>
 
@@ -60,14 +64,21 @@
     function generateQR() {
       const text = document.getElementById("qrText").value.trim();
       const canvas = document.getElementById("qrCanvas");
+      const img = document.getElementById("qrImage");
 
       if (!text) {
-        alert("请输入要生成二维码的内容！");
+        alert("请输入内容！");
         return;
       }
 
       QRCode.toCanvas(canvas, text, { errorCorrectionLevel: 'H', width: 200 }, function (error) {
-        if (error) console.error(error);
+        if (error) {
+          console.error(error);
+          return;
+        }
+
+        // 生成 Base64 图片
+        img.src = canvas.toDataURL("image/png");
       });
     }
 
@@ -88,8 +99,10 @@
       }
     }
 
-    // 主题切换逻辑
-    const themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green", "theme-black-blue", "theme-black-white"];
+    const themes = [
+      "theme-white-blue", "theme-white-red", "theme-white-black",
+      "theme-black-green", "theme-black-blue", "theme-black-white"
+    ];
     let currentThemeIndex = 0;
 
     function toggleTheme() {
@@ -110,7 +123,7 @@
         document.body.classList.add(savedTheme);
         currentThemeIndex = themes.indexOf(savedTheme);
       }
-      generateQR(); // 默认生成一个初始二维码
+      generateQR(); // 初始生成
     };
   </script>
 </body>
