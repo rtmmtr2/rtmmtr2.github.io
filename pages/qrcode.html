@@ -3,42 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <title>二维码生成器</title>
-  <link rel="stylesheet" href="../style.css" />
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/lib/browser.min.js"></script>
   <style>
     body {
+      text-align: center;
       font-family: sans-serif;
       padding: 2rem;
-      text-align: center;
-      transition: background-color 0.3s, color 0.3s;
     }
-
-    input[type="text"] {
-      width: 300px;
+    input {
       padding: 8px;
+      width: 300px;
       font-size: 16px;
-      margin: 10px 0;
     }
-
-    .btn {
+    button {
       margin: 10px;
       padding: 10px 20px;
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 0;
-      border: 2px solid currentColor;
-      background: transparent;
-      color: inherit;
-      transition: background-color 0.3s, color 0.3s;
+      font-size: 16px;
     }
-
-    .btn:hover {
-      background-color: currentColor;
-      color: var(--btn-hover-text, #fff);
-    }
-
-    #qrImage {
-      margin-top: 1rem;
+    img {
+      margin-top: 20px;
       width: 200px;
       height: 200px;
     }
@@ -46,87 +29,33 @@
 </head>
 <body>
   <h1>二维码生成器</h1>
-
-  <input type="text" id="qrText" placeholder="输入内容或网址" value="https://example.com" />
-  <br />
-  <button class="btn" onclick="generateQR()">生成二维码</button>
-  <button class="btn" onclick="downloadQR()">保存二维码</button>
-  <button class="btn" onclick="copyQR()">复制内容</button>
-  <br />
-
-  <img id="qrImage" alt="二维码预览" />
-
-  <br />
-  <a href="../index.html"><button class="btn">返回主页</button></a>
-  <button class="btn" onclick="toggleTheme()">切换主题</button>
+  <input type="text" id="qrText" value="https://example.com" placeholder="输入内容">
+  <br>
+  <button onclick="generateQR()">生成二维码</button>
+  <img id="qrImage" alt="二维码">
 
   <script>
-    const qrImage = document.getElementById("qrImage");
-
     function generateQR() {
       const text = document.getElementById("qrText").value.trim();
+      const img = document.getElementById("qrImage");
+
       if (!text) {
         alert("请输入内容！");
         return;
       }
 
-      QRCode.toDataURL(text, { errorCorrectionLevel: "H", width: 200 }, (err, url) => {
+      QRCode.toDataURL(text, { width: 200 }, (err, url) => {
         if (err) {
-          console.error("二维码生成失败：", err);
-          alert("生成二维码失败！");
+          console.error(err);
+          alert("生成二维码失败");
           return;
         }
-
-        qrImage.src = url;
+        img.src = url;
       });
     }
 
-    function downloadQR() {
-      if (!qrImage.src) {
-        alert("请先生成二维码！");
-        return;
-      }
-      const link = document.createElement("a");
-      link.href = qrImage.src;
-      link.download = "qrcode.png";
-      link.click();
-    }
-
-    function copyQR() {
-      const text = document.getElementById("qrText").value.trim();
-      if (text) {
-        navigator.clipboard.writeText(text).then(() => {
-          alert("内容已复制到剪贴板！");
-        });
-      }
-    }
-
-    const themes = [
-      "theme-white-blue", "theme-white-red", "theme-white-black",
-      "theme-black-green", "theme-black-blue", "theme-black-white"
-    ];
-    let currentThemeIndex = 0;
-
-    function toggleTheme() {
-      document.body.classList.remove(...themes);
-      currentThemeIndex = (currentThemeIndex + 1) % (themes.length + 1);
-      if (currentThemeIndex === themes.length) {
-        localStorage.removeItem("theme");
-      } else {
-        const theme = themes[currentThemeIndex];
-        document.body.classList.add(theme);
-        localStorage.setItem("theme", theme);
-      }
-    }
-
-    window.onload = () => {
-      const savedTheme = localStorage.getItem("theme");
-      if (savedTheme && themes.includes(savedTheme)) {
-        document.body.classList.add(savedTheme);
-        currentThemeIndex = themes.indexOf(savedTheme);
-      }
-      generateQR(); // 默认生成
-    };
+    // 页面加载时默认生成一次
+    window.onload = generateQR;
   </script>
 </body>
 </html>
