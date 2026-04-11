@@ -1,68 +1,367 @@
+/* 现代化多功能工具箱样式 - 优化版 */
 @font-face {
   font-family: 'LED';
   src: url('fonts/DSEG7Classic-Bold.ttf') format('truetype');
 }
 
-body {
-  background: #000;
-  color: #0f0;
-  font-family: 'LED', monospace;
-  text-align: center;
-  padding: 2em;
-  transition: all 0.3s ease;
+:root {
+  /* 现代配色方案 */
+  --primary: #2563eb;
+  --primary-light: #3b82f6;
+  --primary-dark: #1d4ed8;
+  --secondary: #8b5cf6;
+  --accent: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --success: #10b981;
+  --text-light: #ffffff;
+  --text-dark: #1f2937;
+  --bg-light: #f9fafb;
+  --bg-dark: #111827;
+  --card-bg-light: #ffffff;
+  --card-bg-dark: #1f2937;
+  --border-light: #e5e7eb;
+  --border-dark: #374151;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-color: 0 0 20px rgba(37, 99, 235, 0.3);
 }
 
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--bg-dark);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  text-align: center;
+  padding: 2rem;
+  margin: 0;
+  transition: all 0.3s ease;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-image: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15) 0%, transparent 50%);
+}
+
+/* 主标题样式 */
+h1 {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  font-size: 2rem;
+  margin: 2rem 0 1.5rem;
+  color: #e5e7eb;
+  font-weight: 600;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 0.5rem;
+}
+
+h2::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  border-radius: 3px;
+}
+
+/* 链接样式 */
 a {
   color: inherit;
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
-button {
-  background: transparent;
-  border: 2px solid currentColor;
-  color: inherit;
-  font-size: 1.2em;
-  padding: 0.5em 1.5em;
-  margin: 0.5em;
-  cursor: pointer;
-  border-radius: 0;
-  transition: 0.2s ease;
-  box-shadow: 0 0 8px currentColor;
+a:hover {
+  color: var(--primary-light);
 }
 
-button:hover {
-  background: currentColor;
-  color: #000;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-li {
-  margin: 1em 0;
-}
-
-body.theme-white-blue    { background: #fff; color: #007bff; }
-body.theme-white-black   { background: #fff; color: #000; }
-body.theme-white-red     { background: #fff; color: #e60000; }
-
-body.theme-black-green   { background: #000; color: #00ff00; }
-body.theme-black-white   { background: #000; color: #fff; }
-body.theme-black-blue    { background: #000; color: #00aaff; }
-
+/* 按钮基础样式 */
 button, .btn {
-  border-radius: 0;
-  border: 2px solid currentColor;
+  border: 2px solid var(--primary);
   background: transparent;
-  color: inherit;
+  color: var(--primary);
   cursor: pointer;
-  padding: 10px 20px;
-  font-size: 18px;
-  transition: background 0.2s, color 0.2s;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  letter-spacing: 0.5px;
 }
+
 button:hover, .btn:hover {
-  background: currentColor;
-  color: #fff;
+  background: var(--primary);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg), var(--shadow-color);
 }
+
+button:active, .btn:active {
+  transform: translateY(0);
+}
+
+/* 菜单区域样式 */
+.menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem auto;
+  max-width: 1200px;
+  width: 100%;
+}
+
+/* 工具卡片样式 */
+.tool-card {
+  background: var(--card-bg-dark);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-dark);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow);
+}
+
+.tool-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-lg), var(--shadow-color);
+}
+
+.tool-card .btn {
+  width: 100%;
+  margin: 0;
+}
+
+.tool-card h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
+.tool-card p {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* 主题切换按钮 */
+#theme-button {
+  margin-top: 3rem;
+  padding: 14px 32px;
+  font-size: 1.1rem;
+  border-radius: 50px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+
+#theme-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, var(--primary-light), var(--secondary));
+}
+
+#theme-button::after {
+  content: '🎨';
+  margin-left: 8px;
+  font-size: 1.2rem;
+}
+
+/* 返回按钮样式 */
+.back-button {
+  margin-top: 2rem;
+  background: var(--bg-dark);
+  border: 2px solid var(--border-dark);
+  color: #d1d5db;
+}
+
+.back-button:hover {
+  background: var(--border-dark);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* 主题系统 */
+body.theme-white-blue {
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  color: #0369a1;
+}
+
+body.theme-white-blue h1 {
+  background: linear-gradient(135deg, #0369a1, #0ea5e9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+body.theme-white-blue .tool-card {
+  background: white;
+  border-color: #bae6fd;
+}
+
+body.theme-white-red {
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  color: #dc2626;
+}
+
+body.theme-white-red h1 {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+body.theme-white-black {
+  background: linear-gradient(135deg, #fafafa, #f5f5f5);
+  color: #111827;
+}
+
+body.theme-white-black .tool-card {
+  background: white;
+  border-color: #e5e7eb;
+}
+
+body.theme-black-green {
+  background: linear-gradient(135deg, #022c22, #064e3b);
+  color: #10b981;
+}
+
+body.theme-black-green .tool-card {
+  background: #0f766e;
+}
+
+body.theme-black-white {
+  background: linear-gradient(135deg, #1f2937, #374151);
+  color: #f9fafb;
+}
+
+body.theme-black-blue {
+  background: linear-gradient(135deg, #0c4a6e, #075985);
+  color: #93c5fd;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  body {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+  }
+
+  .menu {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+
+  .tool-card {
+    padding: 1.25rem;
+  }
+
+  button, .btn {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+
+  #theme-button {
+    padding: 12px 24px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu {
+    grid-template-columns: 1fr;
+    max-width: 300px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tool-card {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.tool-card:nth-child(1) { animation-delay: 0.1s; }
+.tool-card:nth-child(2) { animation-delay: 0.2s; }
+.tool-card:nth-child(3) { animation-delay: 0.3s; }
+.tool-card:nth-child(4) { animation-delay: 0.4s; }
+.tool-card:nth-child(5) { animation-delay: 0.5s; }
+.tool-card:nth-child(6) { animation-delay: 0.6s; }
+.tool-card:nth-child(7) { animation-delay: 0.7s; }
+.tool-card:nth-child(8) { animation-delay: 0.8s; }
+.tool-card:nth-child(9) { animation-delay: 0.9s; }
+
+/* LED数字显示专用类（保留原有功能） */
+.led-display {
+  font-family: 'LED', monospace;
+  color: #00ff00;
+  text-shadow: 0 0 10px #00ff00;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  border: 2px solid #00ff00;
+  box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+/* 实用类 */
+.text-center { text-align: center; }
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
+.mb-1 { margin-bottom: 1rem; }
+.mb-2 { margin-bottom: 2rem; }
+.p-2 { padding: 2rem; }

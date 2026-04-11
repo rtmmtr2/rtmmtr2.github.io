@@ -2,111 +2,229 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <title>多功能工具箱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多功能工具箱 | 现代化工具集</title>
   <link rel="icon" href="chest.png" type="image/png">
   <link rel="stylesheet" href="style.css" />
   <style>
-    body {
-      text-align: center;
-      font-family: sans-serif;
+    /* 添加一些主页特有的样式 */
+    .hero {
+      margin-bottom: 3rem;
+    }
+    
+    .hero p {
+      font-size: 1.2rem;
+      color: #9ca3af;
+      max-width: 600px;
+      margin: 0 auto 2rem;
+      line-height: 1.6;
+    }
+    
+    .tool-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin: 2rem auto;
+      max-width: 1200px;
+      width: 100%;
+    }
+    
+    .category-card {
+      background: var(--card-bg-dark);
+      border-radius: 16px;
       padding: 2rem;
-      background-color: #fff;
-      color: #000;
-      transition: background-color 0.3s, color 0.3s;
+      border: 1px solid var(--border-dark);
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
     }
-    .menu {
+    
+    .category-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--primary);
+      box-shadow: var(--shadow-lg), var(--shadow-color);
+    }
+    
+    .category-card h3 {
+      color: var(--primary-light);
+      margin-top: 0;
+      font-size: 1.5rem;
       display: flex;
-      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .stats {
+      display: flex;
       justify-content: center;
-      gap: 1rem;
-      margin-top: 2rem;
+      gap: 3rem;
+      margin: 3rem 0;
+      flex-wrap: wrap;
     }
-    .btn {
-      width: 160px;
-      height: 50px;
-      font-size: 16px;
-      border-radius: 0;          /* 方形 */
-      border: 2px solid currentColor;  /* 边框颜色和文字颜色一致 */
-      background-color: transparent;
-      color: inherit;            /* 继承 body 颜色 */
-      cursor: pointer;
-      transition: background-color 0.3s, color 0.3s;
+    
+    .stat-item {
+      text-align: center;
     }
-    .btn:hover {
-      background-color: currentColor;
-      color: var(--btn-hover-text, #fff);
+    
+    .stat-number {
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1;
     }
-    #theme-button {
-      margin-top: 2rem;
-      padding: 10px 20px;
-      font-size: 16px;
-      border-radius: 0;
-      border: 2px solid currentColor;
-      background: transparent;
-      color: inherit;
-      cursor: pointer;
-      transition: background-color 0.3s, color 0.3s;
+    
+    .stat-label {
+      color: #9ca3af;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
     }
-    #theme-button:hover {
-      background-color: currentColor;
-      color: var(--btn-hover-text, #fff);
+    
+    .footer {
+      margin-top: 4rem;
+      color: #6b7280;
+      font-size: 0.9rem;
+      padding: 1rem;
+      border-top: 1px solid var(--border-dark);
+      width: 100%;
     }
-
   </style>
 </head>
 <body>
-  <h1>多功能工具主页</h1>
-  <h2>时间工具</h2>
-  <div class="menu">
-    <a href="pages/clock.html"><button class="btn">北京时间</button></a>
-    <a href="pages/stopwatch.html"><button class="btn">秒表</button></a>
-    <a href="pages/alarm.html"><button class="btn">闹钟</button></a>
+  <div class="hero">
+    <h1>多功能工具箱</h1>
+    <p>精心设计的现代化工具集合，帮助您高效完成各种任务 - 从时间管理到数学计算，从编程辅助到日常工具。</p>
+    
+    <div class="stats">
+      <div class="stat-item">
+        <div class="stat-number">12+</div>
+        <div class="stat-label">实用工具</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">6</div>
+        <div class="stat-label">主题配色</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">100%</div>
+        <div class="stat-label">免费使用</div>
+      </div>
+    </div>
   </div>
 
-  <h2>数学工具</h2>
-  <div class="menu">
-    <a href="pages/unit_converter.html"><button class="btn">单位换算</button></a>
-    <a href="pages/function.html"><button class="btn">函数绘图</button></a>
-    <a href="pages/quadratic_function.html"><button class="btn">二次函数求解</button></a>
-    <a href="pages/line_chart.html"><button class="btn">折线图绘制</button></a>
-  </div>
-  <h2>编程工具</h2>
-  <div class="menu">
-    <a href="pages/rgb_to_hex.html"><button class="btn">RGB 转 HEX</button></a>
-    <a href="pages/file_encrypt.html"><button class="btn">文件加密/解密</button></a>
-    <a href="pages/morse.html"><button class="btn">摩斯密码</button></a>
-  </div>
-  <h2>其他工具</h2>
-    <div class="menu">
-    <a href="pages/random.html"><button class="btn">随机抽选</button></a>
+  <div class="category-grid">
+    <!-- 时间工具 -->
+    <div class="category-card">
+      <h3>⏰ 时间工具</h3>
+      <div class="menu">
+        <a href="pages/clock.html" class="tool-card">
+          <div class="tool-icon">🕐</div>
+          <h3>北京时间</h3>
+          <p>精准的北京时间显示，支持日期和实时更新</p>
+          <button class="btn">立即使用</button>
+        </a>
+        <a href="pages/stopwatch.html" class="tool-card">
+          <div class="tool-icon">⏱️</div>
+          <h3>秒表</h3>
+          <p>精确计时器，支持开始、暂停、重置功能</p>
+          <button class="btn">立即使用</button>
+        </a>
+        <a href="pages/alarm.html" class="tool-card">
+          <div class="tool-icon">⏰</div>
+          <h3>闹钟</h3>
+          <p>自定义闹钟设置，支持声音提醒</p>
+          <button class="btn">立即使用</button>
+        </a>
+      </div>
+    </div>
+
+    <!-- 数学工具 -->
+    <div class="category-card">
+      <h3>🧮 数学工具</h3>
+      <div class="menu">
+        <a href="pages/unit_converter.html" class="tool-card">
+          <div class="tool-icon">📏</div>
+          <h3>单位换算</h3>
+          <p>长度、面积、体积、质量、速度等单位转换</p>
+          <button class="btn">立即使用</button>
+        </a>
+        <a href="pages/function.html" class="tool-card">
+          <div class="tool-icon">📈</div>
+          <h3>高级函数绘图</h3>
+          <p>支持多函数、参数方程、极坐标和隐函数的高级绘图工具</p>
+          <button class="btn">立即使用</button>
+        </a>
+        <a href="pages/quadratic_function.html" class="tool-card">
+          <div class="tool-icon">𝑥²</div>
+          <h3>二次函数求解</h3>
+          <p>二次方程计算器，求根和顶点坐标</p>
+          <button class="btn">立即使用</button>
+        </a>
+        <a href="pages/line_chart.html" class="tool-card">
+          <div class="tool-icon">📊</div>
+          <h3>折线图绘制</h3>
+          <p>数据可视化折线图生成器</p>
+          <button class="btn">立即使用</button>
+        </a>
+      </div>
+    </div>
+
+    <!-- 编程工具 -->
+    <div class="category-card">
+      <h3>💻 编程工具</h3>
+      <div class="menu">
+        <a href="pages/rgb_to_hex.html" class="tool-card">
+          <div class="tool-icon">🎨</div>
+          <h3>RGB 转 HEX</h3>
+          <p>颜色代码转换工具，RGB ↔ HEX</p>
+          <button class="btn">立即使用</button>
+        </a>
+        <a href="pages/file_encrypt.html" class="tool-card">
+          <div class="tool-icon">🔒</div>
+          <h3>文件加密/解密</h3>
+          <p>安全的文件加密和解密工具</p>
+          <button class="btn">立即使用</button>
+        </a>
+        <a href="pages/morse.html" class="tool-card">
+          <div class="tool-icon">•••</div>
+          <h3>摩斯密码</h3>
+          <p>摩斯电码编码和解码工具</p>
+          <button class="btn">立即使用</button>
+        </a>
+      </div>
+    </div>
+
+    <!-- 其他工具 -->
+    <div class="category-card">
+      <h3>📦 其他工具</h3>
+      <div class="menu">
+        <a href="pages/random.html" class="tool-card">
+          <div class="tool-icon">🎲</div>
+          <h3>随机抽选</h3>
+          <p>随机数生成和项目选择工具</p>
+          <button class="btn">立即使用</button>
+        </a>
+        <a href="pages/countdown.html" class="tool-card">
+          <div class="tool-icon">⏳</div>
+          <h3>倒计时</h3>
+          <p>自定义倒计时定时器</p>
+          <button class="btn">立即使用</button>
+        </a>
+      </div>
+    </div>
   </div>
 
   <button id="theme-button" onclick="toggleTheme()">切换主题</button>
 
-  <script>
-    const themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green","theme-black-blue","theme-black-white"];
+  <div class="footer">
+    <p>多功能工具箱 © 2025 | 持续更新中 | <a href="https://github.com/rtmmtr2/rtmmtr2.github.io" style="color: var(--primary-light);">GitHub 仓库</a></p>
+  </div>
 
-    let currentThemeIndex = 0;
-
-    function toggleTheme() {
-      themes.forEach(t => document.body.classList.remove(t));
-      currentThemeIndex = (currentThemeIndex + 1) % (themes.length + 1);
-      if (currentThemeIndex === themes.length) {
-        // 无主题，移除所有主题类
-        localStorage.removeItem("theme");
-      } else {
-        document.body.classList.add(themes[currentThemeIndex]);
-        localStorage.setItem("theme", themes[currentThemeIndex]);
-      }
-    }
-
-    window.onload = () => {
-      const savedTheme = localStorage.getItem("theme");
-      if (savedTheme && themes.includes(savedTheme)) {
-        document.body.classList.add(savedTheme);
-        currentThemeIndex = themes.indexOf(savedTheme);
-      }
-    };
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>

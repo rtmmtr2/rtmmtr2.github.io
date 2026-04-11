@@ -2,28 +2,157 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
-  <title>北京时间</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>北京时间 | 多功能工具箱</title>
   <link rel="icon" href="../chest.png" type="image/png">
   <link rel="stylesheet" href="../style.css">
+  <style>
+    .clock-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: var(--card-bg-dark);
+      border-radius: 16px;
+      border: 1px solid var(--border-dark);
+      box-shadow: var(--shadow);
+    }
+    
+    .time-display {
+      font-family: 'LED', monospace;
+      font-size: 4.5rem;
+      color: #00ff00;
+      text-shadow: 0 0 20px #00ff00;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2rem;
+      border-radius: 16px;
+      border: 3px solid #00ff00;
+      margin: 2rem 0;
+      box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+      letter-spacing: 5px;
+    }
+    
+    .date-display {
+      font-size: 2rem;
+      color: var(--primary-light);
+      margin: 1.5rem 0;
+      font-weight: 600;
+    }
+    
+    .weekday {
+      font-size: 1.5rem;
+      color: #9ca3af;
+      margin-top: 0.5rem;
+    }
+    
+    .clock-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    
+    .info-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+    
+    .info-card {
+      background: rgba(37, 99, 235, 0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      border: 1px solid var(--border-dark);
+    }
+    
+    .info-card h3 {
+      color: var(--primary-light);
+      margin-top: 0;
+      font-size: 1.1rem;
+    }
+    
+    .info-card p {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0.5rem 0 0;
+    }
+    
+    .control-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 2rem;
+    }
+  </style>
 </head>
 <body>
-  <h1 id="clock">00:00:00</h1>
-  <h2 id="date">0000-00-00</h2>
-  <button onclick="toggleTheme()">切换主题</button>
-  <div><a href="../index.html"><button>返回主页</button></a></div>
+  <div class="clock-container">
+    <div class="clock-icon">🕐</div>
+    <h1>北京时间</h1>
+    <p>实时显示中国标准时间（UTC+8）</p>
+    
+    <div class="time-display" id="clock">00:00:00</div>
+    
+    <div class="date-display" id="date">0000-00-00</div>
+    <div class="weekday" id="weekday">星期日</div>
+    
+    <div class="info-panel">
+      <div class="info-card">
+        <h3>时区</h3>
+        <p>UTC+8</p>
+      </div>
+      <div class="info-card">
+        <h3>当前日期</h3>
+        <p id="fullDate">2025年1月1日</p>
+      </div>
+      <div class="info-card">
+        <h3>时间格式</h3>
+        <p>24小时制</p>
+      </div>
+    </div>
+    
+    <div class="control-buttons">
+      <button onclick="toggleTheme()" class="btn">切换主题</button>
+      <a href="../index.html"><button class="btn back-button">返回主页</button></a>
+    </div>
+  </div>
   <script>
+    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+    const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+
     function updateClock() {
       const now = new Date();
       const utc = now.getTime() + now.getTimezoneOffset() * 60000;
       const bj = new Date(utc + 8 * 3600000);
-      document.getElementById("clock").textContent = bj.toTimeString().split(" ")[0];
-      document.getElementById("date").textContent = bj.toISOString().split("T")[0];
+      
+      // 更新时间
+      const hours = String(bj.getHours()).padStart(2, '0');
+      const minutes = String(bj.getMinutes()).padStart(2, '0');
+      const seconds = String(bj.getSeconds()).padStart(2, '0');
+      document.getElementById("clock").textContent = `${hours}:${minutes}:${seconds}`;
+      
+      // 更新日期
+      const year = bj.getFullYear();
+      const month = String(bj.getMonth() + 1).padStart(2, '0');
+      const day = String(bj.getDate()).padStart(2, '0');
+      document.getElementById("date").textContent = `${year}-${month}-${day}`;
+      
+      // 更新星期几
+      const weekday = weekdays[bj.getDay()];
+      document.getElementById("weekday").textContent = weekday;
+      
+      // 更新完整日期
+      const monthName = months[bj.getMonth()];
+      document.getElementById("fullDate").textContent = `${year}年${monthName}${day}日`;
     }
+    
     setInterval(updateClock, 1000);
     updateClock();
 
-    let themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green","theme-black-blue","theme-black-white"];
+    // 主题切换功能
+    const themes = ["theme-white-blue", "theme-white-red", "theme-white-black", "theme-black-green","theme-black-blue","theme-black-white"];
     let currentThemeIndex = 0;
+    
     function toggleTheme() {
       document.body.classList.remove(...themes);
       currentThemeIndex = (currentThemeIndex + 1) % themes.length;
@@ -36,11 +165,17 @@
       }
     }
 
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme) {
-      document.body.classList.add(savedTheme);
-      currentThemeIndex = themes.indexOf(savedTheme);
-    }
+    // 页面加载时恢复主题
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme && themes.includes(savedTheme)) {
+        document.body.classList.add(savedTheme);
+        currentThemeIndex = themes.indexOf(savedTheme);
+      }
+      
+      // 初始更新
+      updateClock();
+    });
   </script>
 </body>
 </html>

@@ -2,195 +2,975 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <title>函数绘图器</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>高级函数绘图器 | 多功能工具箱</title>
   <link rel="icon" href="../chest.png" type="image/png">
   <script src="https://cdn.jsdelivr.net/npm/mathjs@11.8.0/lib/browser/math.min.js"></script>
   <link rel="stylesheet" href="../style.css" />
   <style>
-    canvas {
-      border: 1px solid #333;
-      background: #fff;
-      margin-top: 10px;
+    .function-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: var(--card-bg-dark);
+      border-radius: 16px;
+      border: 1px solid var(--border-dark);
+      box-shadow: var(--shadow);
     }
-    #controls {
-      margin-bottom: 10px;
+    
+    .canvas-container {
+      position: relative;
+      margin: 2rem 0;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid var(--border-dark);
     }
-    input {
-      width: 300px;
+    
+    #graph {
+      display: block;
+      width: 100%;
+      max-width: 700px;
+      height: 700px;
+      background: #ffffff;
+      margin: 0 auto;
     }
-    #info {
-      margin-top: 10px;
-      font-size: 14px;
+    
+    .canvas-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    @media (max-width: 768px) {
+      #graph {
+        width: 100%;
+        max-width: 500px;
+        height: 500px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      #graph {
+        max-width: 400px;
+        height: 400px;
+      }
+    }
+    
+    .controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin: 2rem 0;
+    }
+    
+    @media (max-width: 768px) {
+      .controls-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .function-list, .settings-panel {
+      background: rgba(37, 99, 235, 0.05);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid var(--border-dark);
+    }
+    
+    .function-item {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--bg-dark);
+      border-radius: 8px;
+      border: 1px solid var(--border-dark);
+    }
+    
+    .function-input {
+      flex: 1;
+      padding: 10px 12px;
+      border: 2px solid var(--border-dark);
+      border-radius: 6px;
+      background: var(--bg-dark);
+      color: inherit;
+      font-family: monospace;
+    }
+    
+    .function-input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .color-picker {
+      width: 50px;
+      height: 40px;
+      padding: 2px;
+      border: 2px solid var(--border-dark);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    
+    .slider-container {
+      margin: 1rem 0;
+    }
+    
+    .slider-container label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--primary-light);
+    }
+    
+    .slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--border-dark);
+      outline: none;
+      -webkit-appearance: none;
+    }
+    
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: var(--shadow);
+    }
+    
+    .slider-value {
+      display: inline-block;
+      margin-left: 10px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+    
+    .function-type-selector {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    
+    .type-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 2px solid var(--border-dark);
+      background: var(--bg-dark);
+      color: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .type-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    .example-functions {
+      margin-top: 2rem;
+    }
+    
+    .example-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .example-btn {
+      padding: 12px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-dark);
+      border-radius: 8px;
+      color: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+    
+    .example-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 2rem 0;
+      justify-content: center;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      border: none;
+    }
+    
+    .btn-secondary {
+      background: var(--secondary);
+      color: white;
+      border: none;
+    }
+    
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+      border: none;
+    }
+    
+    .info-panel {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(10, 166, 153, 0.1);
+      border-radius: 12px;
+      border-left: 4px solid var(--accent);
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .info-panel h3 {
+      color: var(--accent);
+      margin-top: 0;
+    }
+    
+    .function-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+    .remove-btn {
+      background: var(--danger);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    
+    .add-btn {
+      background: var(--success);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
-  <h1>函数绘图器</h1>
-  <div id="controls">
-    函数表达式 y = <input type="text" id="expression" value="sin(x)">
-    <button onclick="drawFunction()">绘图</button>
-    <button onclick="toggleTheme()">切换主题</button>
-    <a href="../index.html"><button>返回主页</button></a>
+  <div class="function-container">
+    <div class="function-icon">📈</div>
+    <h1>高级函数绘图器</h1>
+    <p>绘制和分析复杂数学函数，支持多函数、参数方程、极坐标和动态参数。</p>
+    
+    <div class="function-type-selector">
+      <button class="type-btn active" onclick="setFunctionType('cartesian')">直角坐标 y=f(x)</button>
+      <button class="type-btn" onclick="setFunctionType('parametric')">参数方程</button>
+      <button class="type-btn" onclick="setFunctionType('polar')">极坐标 r=f(θ)</button>
+      <button class="type-btn" onclick="setFunctionType('implicit')">隐函数 f(x,y)=0</button>
+    </div>
+    
+    <div class="controls-grid">
+      <!-- 左侧：函数列表 -->
+      <div class="function-list">
+        <h3>函数列表</h3>
+        <div id="functionItems">
+          <!-- 函数项将通过JS动态生成 -->
+        </div>
+        <button class="add-btn" onclick="addFunction()">➕ 添加函数</button>
+      </div>
+      
+      <!-- 右侧：设置面板 -->
+      <div class="settings-panel">
+        <h3>绘图设置</h3>
+        
+        <div class="slider-container">
+          <label>X轴范围: <span id="xRangeValue" class="slider-value">[-10, 10]</span></label>
+          <input type="range" class="slider" id="xRange" min="1" max="50" value="10" step="0.1">
+        </div>
+        
+        <div class="slider-container">
+          <label>Y轴范围: <span id="yRangeValue" class="slider-value">[-10, 10]</span></label>
+          <input type="range" class="slider" id="yRange" min="1" max="50" value="10" step="0.1">
+        </div>
+        
+        <div class="slider-container">
+          <label>采样精度: <span id="precisionValue" class="slider-value">高</span></label>
+          <input type="range" class="slider" id="precision" min="100" max="2000" value="800" step="100">
+        </div>
+        
+        <div style="margin-top: 1.5rem;">
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--primary-light);">
+            <input type="checkbox" id="showGrid" checked> 显示网格
+          </label>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--primary-light);">
+            <input type="checkbox" id="showAxes" checked> 显示坐标轴
+          </label>
+          <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: var(--primary-light);">
+            <input type="checkbox" id="showLabels" checked> 显示标签
+          </label>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 示例函数 -->
+    <div class="example-functions">
+      <h3>示例函数</h3>
+      <div class="example-grid" id="examples">
+        <!-- 示例将通过JS动态生成 -->
+      </div>
+    </div>
+    
+    <!-- 操作按钮 -->
+    <div class="action-buttons">
+      <button class="btn btn-primary" onclick="drawAllFunctions()">绘制所有函数</button>
+      <button class="btn btn-secondary" onclick="clearCanvas()">清除画布</button>
+      <button class="btn" onclick="exportImage()">导出图像</button>
+      <button class="btn" onclick="toggleTheme()">切换主题</button>
+      <a href="../index.html"><button class="btn back-button">返回主页</button></a>
+    </div>
+    
+    <!-- 画布容器 -->
+    <div class="canvas-container">
+      <canvas id="graph" width="700" height="700"></canvas>
+    </div>
+    
+    <!-- 信息面板 -->
+    <div class="info-panel">
+      <h3>函数分析</h3>
+      <div id="info">添加函数并点击"绘制所有函数"开始分析...</div>
+    </div>
   </div>
-  <canvas id="graph" width="800" height="400"></canvas>
-  <div id="info"></div>
-
+  
   <script>
+    // ==================== 全局变量 ====================
     const canvas = document.getElementById("graph");
     const ctx = canvas.getContext("2d");
     const width = canvas.width;
     const height = canvas.height;
     const originX = width / 2;
     const originY = height / 2;
-    const xScale = 40;
-    const yScale = 40;
-
-    function drawFunction() {
-      const expr = document.getElementById("expression").value;
-      let fn;
-      try {
-        fn = math.compile(expr);
-      } catch (e) {
-        alert("表达式有误：" + e.message);
-        return;
-      }
-
-      ctx.clearRect(0, 0, width, height);
-
-      // 坐标轴
-      ctx.beginPath();
-      ctx.moveTo(0, originY);
-      ctx.lineTo(width, originY);
-      ctx.moveTo(originX, 0);
-      ctx.lineTo(originX, height);
-      ctx.strokeStyle = "#000";
-      ctx.stroke();
-
-      // 绘图
-      ctx.beginPath();
-      let started = false;
-      for (let px = 0; px < width; px++) {
-        const x = (px - originX) / xScale;
-        let y;
-        try {
-          y = fn.evaluate({ x });
-        } catch {
-          continue;
-        }
-        const py = originY - y * yScale;
-        if (!started) {
-          ctx.moveTo(px, py);
-          started = true;
-        } else {
-          ctx.lineTo(px, py);
-        }
-      }
-      ctx.strokeStyle = "blue";
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      analyzeFunction(expr);
+    
+    // 默认设置
+    let xRange = 10;
+    let yRange = 10;
+    let precision = 800;
+    let functionType = 'cartesian'; // cartesian, parametric, polar, implicit
+    
+    // 函数列表
+    let functions = [
+      { id: 1, expr: 'sin(x)', color: '#2563eb', visible: true, type: 'cartesian' },
+      { id: 2, expr: 'cos(x)', color: '#8b5cf6', visible: true, type: 'cartesian' }
+    ];
+    
+    // 示例函数
+    const examples = {
+      cartesian: [
+        { name: '正弦函数', expr: 'sin(x)' },
+        { name: '余弦函数', expr: 'cos(x)' },
+        { name: '指数函数', expr: 'exp(x)' },
+        { name: '对数函数', expr: 'log(x)' },
+        { name: '多项式', expr: 'x^3 - 3*x' },
+        { name: '三角函数组合', expr: 'sin(x) + cos(2*x)' },
+        { name: '高斯函数', expr: 'exp(-x^2/2)' },
+        { name: '双曲函数', expr: 'sinh(x)' },
+        { name: '有理函数', expr: '1/(1+x^2)' },
+        { name: '绝对值函数', expr: 'abs(x)' }
+      ],
+      parametric: [
+        { name: '圆', expr: 'cos(t), sin(t)' },
+        { name: '椭圆', expr: '2*cos(t), sin(t)' },
+        { name: '螺旋线', expr: 't*cos(t), t*sin(t)' },
+        { name: '利萨如图形', expr: 'sin(3*t), cos(5*t)' },
+        { name: '心脏线', expr: '(1-cos(t))*cos(t), (1-cos(t))*sin(t)' }
+      ],
+      polar: [
+        { name: '极坐标圆', expr: '1' },
+        { name: '玫瑰线', expr: 'sin(3*theta)' },
+        { name: '阿基米德螺线', expr: 'theta' },
+        { name: '心形线', expr: '1 + cos(theta)' },
+        { name: '双纽线', expr: 'sqrt(cos(2*theta))' }
+      ],
+      implicit: [
+        { name: '圆方程', expr: 'x^2 + y^2 - 1' },
+        { name: '椭圆', expr: 'x^2/4 + y^2 - 1' },
+        { name: '双曲线', expr: 'x^2 - y^2 - 1' },
+        { name: '抛物线', expr: 'y - x^2' },
+        { name: '心形线', expr: '(x^2+y^2-1)^3 - x^2*y^3' }
+      ]
+    };
+    
+    // ==================== 初始化 ====================
+    function init() {
+      renderFunctionList();
+      renderExamples();
+      setupSliders();
+      drawAllFunctions();
     }
-
-    function analyzeFunction(expr) {
-      const info = document.getElementById("info");
-      let result = "";
-
-      try {
-        const node = math.parse(expr);
-        const x = math.parse("x");
-        const f = node.compile();
-        const df = math.derivative(node, "x").compile();
-
-        // 单调区间近似
-        result += "<b>单调性区间（近似）：</b><br>";
-        const intervals = [];
-        let increasing = null;
-        let a = -10;
-        let b = 10;
-        const step = 0.2;
-        let start = a;
-        for (let x1 = a; x1 < b; x1 += step) {
-          const d = df.evaluate({ x: x1 });
-          const nowInc = d > 0;
-          if (increasing === null) {
-            increasing = nowInc;
-            start = x1;
-          } else if (nowInc !== increasing) {
-            intervals.push({ inc: increasing, start, end: x1 });
-            start = x1;
-            increasing = nowInc;
+    
+    // ==================== 函数列表管理 ====================
+    function renderFunctionList() {
+      const container = document.getElementById('functionItems');
+      container.innerHTML = '';
+      
+      functions.forEach(func => {
+        const item = document.createElement('div');
+        item.className = 'function-item';
+        item.innerHTML = `
+          <input type="color" class="color-picker" value="${func.color}" onchange="updateFunctionColor(${func.id}, this.value)">
+          <input type="text" class="function-input" value="${func.expr}" onchange="updateFunctionExpr(${func.id}, this.value)" placeholder="输入函数表达式">
+          <button class="remove-btn" onclick="removeFunction(${func.id})">×</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+    
+    function addFunction() {
+      const newId = functions.length > 0 ? Math.max(...functions.map(f => f.id)) + 1 : 1;
+      const defaultColors = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6'];
+      const color = defaultColors[functions.length % defaultColors.length];
+      
+      functions.push({
+        id: newId,
+        expr: 'sin(x)',
+        color: color,
+        visible: true,
+        type: functionType
+      });
+      
+      renderFunctionList();
+    }
+    
+    function removeFunction(id) {
+      functions = functions.filter(f => f.id !== id);
+      renderFunctionList();
+    }
+    
+    function updateFunctionColor(id, color) {
+      const func = functions.find(f => f.id === id);
+      if (func) func.color = color;
+    }
+    
+    function updateFunctionExpr(id, expr) {
+      const func = functions.find(f => f.id === id);
+      if (func) func.expr = expr.trim();
+    }
+    
+    // ==================== 函数类型切换 ====================
+    function setFunctionType(type) {
+      functionType = type;
+      
+      // 更新按钮样式
+      document.querySelectorAll('.type-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      // 清空函数列表并添加新类型的示例
+      functions = [];
+      addFunction();
+      
+      // 更新示例
+      renderExamples();
+    }
+    
+    // ==================== 示例函数 ====================
+    function renderExamples() {
+      const container = document.getElementById('examples');
+      container.innerHTML = '';
+      
+      examples[functionType].forEach(example => {
+        const btn = document.createElement('button');
+        btn.className = 'example-btn';
+        btn.innerHTML = `<strong>${example.name}</strong><br><code>${example.expr}</code>`;
+        btn.onclick = () => {
+          // 将示例添加到函数列表
+          const newId = functions.length > 0 ? Math.max(...functions.map(f => f.id)) + 1 : 1;
+          const defaultColors = ['#2563eb', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444'];
+          const color = defaultColors[functions.length % defaultColors.length];
+          
+          functions.push({
+            id: newId,
+            expr: example.expr,
+            color: color,
+            visible: true,
+            type: functionType
+          });
+          
+          renderFunctionList();
+        };
+        container.appendChild(btn);
+      });
+    }
+    
+    // ==================== 滑块设置 ====================
+    function setupSliders() {
+      const xRangeSlider = document.getElementById('xRange');
+      const yRangeSlider = document.getElementById('yRange');
+      const precisionSlider = document.getElementById('precision');
+      
+      xRangeSlider.addEventListener('input', function() {
+        xRange = parseFloat(this.value);
+        document.getElementById('xRangeValue').textContent = `[-${xRange.toFixed(1)}, ${xRange.toFixed(1)}]`;
+      });
+      
+      yRangeSlider.addEventListener('input', function() {
+        yRange = parseFloat(this.value);
+        document.getElementById('yRangeValue').textContent = `[-${yRange.toFixed(1)}, ${yRange.toFixed(1)}]`;
+      });
+      
+      precisionSlider.addEventListener('input', function() {
+        precision = parseInt(this.value);
+        const quality = precision < 500 ? '低' : precision < 1000 ? '中' : '高';
+        document.getElementById('precisionValue').textContent = quality;
+      });
+    }
+    
+    // ==================== 绘图引擎 ====================
+    function drawAllFunctions() {
+      // 清空画布
+      clearCanvas();
+      
+      // 绘制网格和坐标轴
+      drawGridAndAxes();
+      
+      // 绘制每个函数
+      functions.forEach(func => {
+        if (func.visible) {
+          try {
+            switch (func.type || functionType) {
+              case 'cartesian':
+                drawCartesianFunction(func);
+                break;
+              case 'parametric':
+                drawParametricFunction(func);
+                break;
+              case 'polar':
+                drawPolarFunction(func);
+                break;
+              case 'implicit':
+                drawImplicitFunction(func);
+                break;
+            }
+          } catch (error) {
+            console.error(`绘制函数 ${func.expr} 时出错:`, error);
           }
         }
-        intervals.push({ inc: increasing, start, end: b });
-        for (const intv of intervals) {
-          const s = formatInterval(intv.start);
-          const e = formatInterval(intv.end);
-          result += (intv.inc ? "递增" : "递减") + `：[${s}, ${e}]<br>`;
+      });
+      
+      // 分析函数
+      analyzeAllFunctions();
+    }
+    
+    function drawGridAndAxes() {
+      const showGrid = document.getElementById('showGrid').checked;
+      const showAxes = document.getElementById('showAxes').checked;
+      const showLabels = document.getElementById('showLabels').checked;
+      
+      // 使用统一的缩放比例，确保1:1比例
+      const scale = Math.min(width / (2 * xRange), height / (2 * yRange));
+      const xScale = scale;
+      const yScale = scale;
+      
+      // 计算实际使用的范围（基于统一的scale）
+      const usedXRange = width / (2 * scale);
+      const usedYRange = height / (2 * scale);
+      
+      // 绘制网格
+      if (showGrid) {
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.lineWidth = 1;
+        
+        // 垂直线
+        for (let x = -usedXRange; x <= usedXRange; x++) {
+          if (x === 0) continue;
+          const px = originX + x * xScale;
+          ctx.beginPath();
+          ctx.moveTo(px, 0);
+          ctx.lineTo(px, height);
+          ctx.stroke();
         }
-
-        // 奇偶性检测
-        const fx = (x) => f.evaluate({ x });
-        const epsilon = 1e-4;
-        let even = true, odd = true;
-        for (let x = 0.1; x <= 5; x += 0.1) {
-          const f1 = fx(x);
-          const f2 = fx(-x);
-          if (Math.abs(f1 - f2) > epsilon) even = false;
-          if (Math.abs(f1 + f2) > epsilon) odd = false;
+        
+        // 水平线
+        for (let y = -usedYRange; y <= usedYRange; y++) {
+          if (y === 0) continue;
+          const py = originY - y * yScale;
+          ctx.beginPath();
+          ctx.moveTo(0, py);
+          ctx.lineTo(width, py);
+          ctx.stroke();
         }
-        if (even) result += "<b>该函数为偶函数，对称轴为 x=0</b><br>";
-        if (odd) result += "<b>该函数为奇函数，对称中心为原点</b><br>";
-
-        // 周期性检测（尝试寻找最小 T）
-        let T = null;
-        const fx0 = fx;
-        for (let t = 0.1; t <= 10; t += 0.1) {
-          let periodic = true;
-          for (let x = -5; x <= 5; x += 0.2) {
-            if (Math.abs(fx0(x) - fx0(x + t)) > 0.05) {
-              periodic = false;
-              break;
+      }
+      
+      // 绘制坐标轴
+      if (showAxes) {
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        
+        // X轴
+        ctx.beginPath();
+        ctx.moveTo(0, originY);
+        ctx.lineTo(width, originY);
+        ctx.stroke();
+        
+        // Y轴
+        ctx.beginPath();
+        ctx.moveTo(originX, 0);
+        ctx.lineTo(originX, height);
+        ctx.stroke();
+        
+        // 绘制刻度
+        ctx.fillStyle = '#000';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        
+        // X轴刻度
+        for (let x = -usedXRange + 1; x < usedXRange; x++) {
+          if (x === 0) continue;
+          const px = originX + x * xScale;
+          ctx.beginPath();
+          ctx.moveTo(px, originY - 5);
+          ctx.lineTo(px, originY + 5);
+          ctx.stroke();
+          
+          if (showLabels) {
+            ctx.fillText(x.toFixed(1), px, originY + 8);
+          }
+        }
+        
+        // Y轴刻度
+        for (let y = -usedYRange + 1; y < usedYRange; y++) {
+          if (y === 0) continue;
+          const py = originY - y * yScale;
+          ctx.beginPath();
+          ctx.moveTo(originX - 5, py);
+          ctx.lineTo(originX + 5, py);
+          ctx.stroke();
+          
+          if (showLabels) {
+            ctx.fillText(y.toFixed(1), originX - 15, py - 6);
+          }
+        }
+        
+        // 原点标签
+        if (showLabels) {
+          ctx.fillText('0', originX + 10, originY + 8);
+        }
+      }
+    }
+    
+    function drawCartesianFunction(func) {
+      // 使用统一的缩放比例，确保1:1比例
+      const scale = Math.min(width / (2 * xRange), height / (2 * yRange));
+      const xScale = scale;
+      const yScale = scale;
+      
+      // 计算实际使用的范围（基于统一的scale）
+      const usedXRange = width / (2 * scale);
+      
+      try {
+        const fn = math.compile(func.expr);
+        ctx.strokeStyle = func.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        
+        let started = false;
+        const step = (2 * usedXRange) / precision;
+        
+        for (let i = 0; i <= precision; i++) {
+          const x = -usedXRange + i * step;
+          let y;
+          
+          try {
+            y = fn.evaluate({ x: x });
+            // 检查y是否在范围内
+            if (Math.abs(y) > 100 * yRange) {
+              started = false;
+              continue;
+            }
+          } catch {
+            started = false;
+            continue;
+          }
+          
+          const px = originX + x * xScale;
+          const py = originY - y * yScale;
+          
+          if (isNaN(py) || !isFinite(py)) {
+            started = false;
+            continue;
+          }
+          
+          if (!started) {
+            ctx.moveTo(px, py);
+            started = true;
+          } else {
+            ctx.lineTo(px, py);
+          }
+        }
+        
+        ctx.stroke();
+        
+        // 绘制函数标签
+        ctx.fillStyle = func.color;
+        ctx.font = '14px Arial';
+        ctx.textAlign = 'left';
+        const lastX = usedXRange * 0.8;
+        const lastY = fn.evaluate({ x: lastX });
+        if (!isNaN(lastY) && Math.abs(lastY) <= yRange) {
+          const labelX = originX + lastX * xScale + 5;
+          const labelY = originY - lastY * yScale - 10;
+          ctx.fillText(`y = ${func.expr}`, labelX, labelY);
+        }
+      } catch (error) {
+        console.error(`编译函数 ${func.expr} 时出错:`, error);
+      }
+    }
+    
+    function drawParametricFunction(func) {
+      const xScale = width / (2 * xRange);
+      const yScale = height / (2 * yRange);
+      
+      try {
+        const parts = func.expr.split(',').map(p => p.trim());
+        if (parts.length !== 2) throw new Error('参数方程需要两个表达式: x(t), y(t)');
+        
+        const xFn = math.compile(parts[0]);
+        const yFn = math.compile(parts[1]);
+        
+        ctx.strokeStyle = func.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        
+        const tStart = 0;
+        const tEnd = 2 * Math.PI;
+        const tStep = (tEnd - tStart) / precision;
+        
+        let started = false;
+        
+        for (let i = 0; i <= precision; i++) {
+          const t = tStart + i * tStep;
+          let x, y;
+          
+          try {
+            x = xFn.evaluate({ t: t });
+            y = yFn.evaluate({ t: t });
+            
+            if (Math.abs(x) > xRange * 2 || Math.abs(y) > yRange * 2) {
+              started = false;
+              continue;
+            }
+          } catch {
+            started = false;
+            continue;
+          }
+          
+          const px = originX + x * xScale;
+          const py = originY - y * yScale;
+          
+          if (isNaN(px) || isNaN(py) || !isFinite(px) || !isFinite(py)) {
+            started = false;
+            continue;
+          }
+          
+          if (!started) {
+            ctx.moveTo(px, py);
+            started = true;
+          } else {
+            ctx.lineTo(px, py);
+          }
+        }
+        
+        ctx.stroke();
+      } catch (error) {
+        console.error(`绘制参数方程 ${func.expr} 时出错:`, error);
+      }
+    }
+    
+    function drawPolarFunction(func) {
+      const scale = Math.min(width, height) / (2 * Math.max(xRange, yRange));
+      
+      try {
+        const rFn = math.compile(func.expr);
+        ctx.strokeStyle = func.color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        
+        const thetaStart = 0;
+        const thetaEnd = 2 * Math.PI;
+        const thetaStep = (thetaEnd - thetaStart) / precision;
+        
+        let started = false;
+        
+        for (let i = 0; i <= precision; i++) {
+          const theta = thetaStart + i * thetaStep;
+          let r;
+          
+          try {
+            r = rFn.evaluate({ theta: theta });
+            if (r < 0 || Math.abs(r) > 2 * Math.max(xRange, yRange)) {
+              started = false;
+              continue;
+            }
+          } catch {
+            started = false;
+            continue;
+          }
+          
+          const x = r * Math.cos(theta);
+          const y = r * Math.sin(theta);
+          
+          const px = originX + x * scale;
+          const py = originY - y * scale;
+          
+          if (isNaN(px) || isNaN(py) || !isFinite(px) || !isFinite(py)) {
+            started = false;
+            continue;
+          }
+          
+          if (!started) {
+            ctx.moveTo(px, py);
+            started = true;
+          } else {
+            ctx.lineTo(px, py);
+          }
+        }
+        
+        ctx.stroke();
+      } catch (error) {
+        console.error(`绘制极坐标函数 ${func.expr} 时出错:`, error);
+      }
+    }
+    
+    function drawImplicitFunction(func) {
+      const xScale = width / (2 * xRange);
+      const yScale = height / (2 * yRange);
+      const resolution = 2; // 像素精度
+      
+      try {
+        const fn = math.compile(func.expr);
+        
+        // 使用 Marching Squares 算法绘制隐函数
+        ctx.fillStyle = func.color;
+        
+        for (let px = 0; px < width; px += resolution) {
+          for (let py = 0; py < height; py += resolution) {
+            const x = (px - originX) / xScale;
+            const y = (originY - py) / yScale;
+            
+            try {
+              const value = fn.evaluate({ x: x, y: y });
+              // 绘制接近零的等高线
+              if (Math.abs(value) < 0.05) {
+                ctx.fillRect(px, py, resolution, resolution);
+              }
+            } catch {
+              // 忽略计算错误
             }
           }
-          if (periodic) {
-            T = t;
-            break;
-          }
         }
-        if (T) result += "<b>最小正周期 T ≈</b> " + formatInterval(T) + "<br>";
-
-      } catch (e) {
-        result += "函数分析失败：" + e.message;
+      } catch (error) {
+        console.error(`绘制隐函数 ${func.expr} 时出错:`, error);
       }
-
+    }
+    
+    function clearCanvas() {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+    }
+    
+    // ==================== 函数分析 ====================
+    function analyzeAllFunctions() {
+      const info = document.getElementById("info");
+      let result = "<b>函数分析结果：</b><br><br>";
+      
+      functions.forEach((func, index) => {
+        if (!func.visible) return;
+        
+        result += `<div style="border-left: 3px solid ${func.color}; padding-left: 10px; margin: 10px 0;">`;
+        result += `<strong>函数 ${index + 1}: ${func.expr}</strong><br>`;
+        
+        try {
+          const node = math.parse(func.expr);
+          
+          // 检查函数定义域
+          result += "定义域: 实数集 (需注意特殊点)<br>";
+          
+          // 计算导数
+          try {
+            const df = math.derivative(node, "x");
+            result += `导数: ${df.toString()}<br>`;
+          } catch {
+            result += "导数: 无法计算<br>";
+          }
+          
+          // 计算二阶导数
+          try {
+            const d2f = math.derivative(math.derivative(node, "x"), "x");
+            result += `二阶导数: ${d2f.toString()}<br>`;
+          } catch {
+            result += "二阶导数: 无法计算<br>";
+          }
+          
+          // 奇偶性检查
+          try {
+            const f = node.compile();
+            let even = true, odd = true;
+            for (let testX = 0.1; testX <= 2; testX += 0.5) {
+              try {
+                const f1 = f.evaluate({ x: testX });
+                const f2 = f.evaluate({ x: -testX });
+                if (Math.abs(f1 - f2) > 1e-4) even = false;
+                if (Math.abs(f1 + f2) > 1e-4) odd = false;
+              } catch { break; }
+            }
+            if (even) result += "奇偶性: 偶函数<br>";
+            else if (odd) result += "奇偶性: 奇函数<br>";
+            else result += "奇偶性: 非奇非偶<br>";
+          } catch {
+            result += "奇偶性: 无法判断<br>";
+          }
+          
+        } catch (error) {
+          result += `分析失败: ${error.message}<br>`;
+        }
+        
+        result += "</div>";
+      });
+      
       info.innerHTML = result;
     }
-
-    function formatInterval(v) {
-      // 转为 π 表示（例如 1.57 ≈ π/2）
-      const pi = Math.PI;
-      const k = Math.round(v / pi * 100) / 100;
-      if (Math.abs(k) < 0.01) return "0";
-      const frac = rationalApproximation(k);
-      if (frac.den === 1) return `${frac.num}π`;
-      return `${frac.num}π/${frac.den}`;
+    
+    // ==================== 导出功能 ====================
+    function exportImage() {
+      const link = document.createElement('a');
+      link.download = `函数图_${new Date().getTime()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
     }
-
-    function rationalApproximation(x) {
-      const maxDen = 20;
-      let best = { num: 0, den: 1, err: Math.abs(x) };
-      for (let d = 1; d <= maxDen; d++) {
-        const n = Math.round(x * d);
-        const err = Math.abs(x - n / d);
-        if (err < best.err) {
-          best = { num: n, den: d, err };
-        }
-      }
-      return best;
-    }
-
-    // 主题切换
+    
+    // ==================== 主题切换 ====================
     const themes = [
       "theme-white-blue",
       "theme-white-red",
@@ -200,20 +980,31 @@
       "theme-black-white"
     ];
     let currentThemeIndex = 0;
+    
     function toggleTheme() {
       document.body.classList.remove(...themes);
       currentThemeIndex = (currentThemeIndex + 1) % themes.length;
       const theme = themes[currentThemeIndex];
-      document.body.classList.add(theme);
-      localStorage.setItem("theme", theme);
+      if (theme) {
+        document.body.classList.add(theme);
+        localStorage.setItem("theme", theme);
+      } else {
+        localStorage.removeItem("theme");
+      }
     }
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme && themes.includes(savedTheme)) {
-      document.body.classList.add(savedTheme);
-      currentThemeIndex = themes.indexOf(savedTheme);
-    }
-
-    drawFunction();
+    
+    // 页面加载时初始化
+    window.addEventListener('DOMContentLoaded', () => {
+      // 恢复主题
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme && themes.includes(savedTheme)) {
+        document.body.classList.add(savedTheme);
+        currentThemeIndex = themes.indexOf(savedTheme);
+      }
+      
+      // 初始化应用
+      init();
+    });
   </script>
 </body>
 </html>
